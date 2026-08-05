@@ -1,0 +1,146 @@
+import demoData from "@/data/demo.json";
+
+import { addDays, toDateKey, todayKey } from "@/lib/data/dates";
+import type {
+  AnalyticsData,
+  DemoDataFile,
+  Habit,
+  Routine,
+  Task,
+} from "@/lib/data/types";
+import { seedCompletionLog } from "@/lib/data/task-completions";
+
+export const DEMO_TEMPLATE_USER_ID = "1";
+
+/** Immutable snapshot from demo.json — never mutated at runtime */
+const baseline: DemoDataFile = structuredClone(demoData as DemoDataFile);
+
+export function getBaselineDemoFile(): DemoDataFile {
+  return baseline;
+}
+
+export function getBaselineTasks(): Task[] {
+  return baseline.tasks[DEMO_TEMPLATE_USER_ID] ?? baseline.tasks.default ?? [];
+}
+
+export function getBaselineHabits(): Habit[] {
+  return baseline.habits[DEMO_TEMPLATE_USER_ID] ?? [];
+}
+
+export function getBaselineRoutines(): Routine[] {
+  return baseline.routines[DEMO_TEMPLATE_USER_ID] ?? [];
+}
+
+export function getBaselineAnalytics(): AnalyticsData {
+  return structuredClone(
+    baseline.analytics[DEMO_TEMPLATE_USER_ID] ?? baseline.analytics.default
+  );
+}
+
+/** Clone template tasks for a new user bucket (per-user isolated data) */
+export function cloneTasksForUser(tasks: Task[], userId: string): Task[] {
+  return structuredClone(tasks).map((task) => ({
+    ...task,
+    userId,
+    completionLog: task.completionLog
+      ? structuredClone(task.completionLog)
+      : undefined,
+  }));
+}
+
+export function cloneHabitsForUser(habits: Habit[], userId: string): Habit[] {
+  return structuredClone(habits).map((h) => ({ ...h, userId }));
+}
+
+export function cloneRoutinesForUser(routines: Routine[], userId: string): Routine[] {
+  return structuredClone(routines).map((r) => ({ ...r, userId }));
+}
+
+/** Deterministic pseudo-variation for demo calendar coloring */
+function historyStatus(taskId: string, dayOffset: number): "done" | "missed" | null {
+  if (dayOffset === 0) return null;
+  const n = (taskId.charCodeAt(taskId.length - 1) + dayOffset * 7) % 10;
+  if (n === 0 || n === 1) return "missed";
+  if (n <= 7) return "done";
+  return null;
+}
+
+/** Fill ~30 days of daily task history for calendar + richer demo */
+export function enrichTaskCompletionHistory(task: Task): Task {
+  const log = { ...seedCompletionLog(task) };
+  if (task.period !== "daily") {
+    return { ...task, completionLog: log };
+  }
+
+  const today = new Date();
+  for (let i = 0; i < 30; i++) {
+    const date = addDays(today, -i);
+    const key = toDateKey(date);
+    if (log[key]) continue;
+
+    const status = historyStatus(task.id, i);
+    if (!status) continue;
+
+    log[key] =
+      status === "done"
+        ? {
+            status: "done",
+            completedAt: new Date(
+              date.getFullYear(),
+              date.getMonth(),
+              date.getDate(),
+              8 + (i % 5),
+              15
+            ).toISOString(),
+            durationMinutes: task.estimatedMinutes ?? 20,
+          }
+        : { status: "missed" };
+  }
+
+  if (task.completed && !log[todayKey()]) {
+    log[todayKey()] = {
+      status: "done",
+      completedAt: new Date().toISOString(),
+      durationMinutes: task.estimatedMinutes,
+    };
+  }
+
+  return { ...task, completionLog: log };
+}
+
+function needsTaskReseed(existing: Task[] | undefined, template: Task[]): boolean {
+  if (!existing || existing.length === 0) return true;
+  return existing.length < template.length;
+}
+
+export function ensureUserDemoBucket(
+  store: DemoDataFile,
+  userId: string
+): DemoDataFile {
+  const templateTasks = getBaselineTasks();
+  const templateHabits = getBaselineHabits();
+  const templateRoutines = getBaselineRoutines();
+
+  if (needsTaskReseed(store.tasks[userId], templateTasks)) {
+    store.tasks[userId] = cloneTasksForUser(templateTasks, userId);
+  }
+
+  if (needsTaskReseed(store.habits[userId], templateHabits)) {
+    store.habits[userId] = cloneHabitsForUser(templateHabits, userId);
+  }
+
+  if (needsTaskReseed(store.routines[userId], templateRoutines)) {
+    store.routines[userId] = cloneRoutinesForUser(templateRoutines, userId);
+  }
+
+  if (!store.analytics[userId]) {
+    store.analytics[userId] = getBaselineAnalytics();
+  }
+
+  return store;
+}
+
+/** Reset runtime store back to demo.json baseline (dev / demo reset) */
+export function createFreshDemoStore(): DemoDataFile {
+  return structuredClone(baseline);
+}

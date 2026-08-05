@@ -1,0 +1,375 @@
+{
+  "version": "1.0.0",
+  "users": [
+    {
+      "id": "1",
+      "email": "demo@discipline.os",
+      "password": "password123",
+      "name": "Demo User",
+      "joinedAt": "2026-01-15T08:00:00.000Z"
+    }
+  ],
+  "tasks": {
+    "1": [
+      {
+        "id": "t1",
+        "userId": "1",
+        "label": "Morning workout",
+        "description": "45 min strength or cardio session",
+        "period": "daily",
+        "completed": true,
+        "streak": 12,
+        "category": "health",
+        "priority": "high",
+        "preferredTime": "06:30",
+        "estimatedMinutes": 45,
+        "createdAt": "2026-01-20T06:00:00.000Z"
+      },
+      {
+        "id": "t2",
+        "userId": "1",
+        "label": "Read 30 minutes",
+        "description": "Non-fiction or personal growth book",
+        "period": "daily",
+        "completed": true,
+        "streak": 8,
+        "category": "growth",
+        "priority": "medium",
+        "preferredTime": "21:00",
+        "estimatedMinutes": 30,
+        "createdAt": "2026-01-22T20:00:00.000Z"
+      },
+      {
+        "id": "t3",
+        "userId": "1",
+        "label": "No social media before noon",
+        "description": "Stay focused until midday",
+        "period": "daily",
+        "completed": false,
+        "streak": 5,
+        "category": "focus",
+        "priority": "high",
+        "preferredTime": "08:00",
+        "estimatedMinutes": 0,
+        "createdAt": "2026-02-01T08:00:00.000Z"
+      },
+      {
+        "id": "t4",
+        "userId": "1",
+        "label": "Journal before bed",
+        "description": "3 gratitudes + 1 lesson from today",
+        "period": "daily",
+        "completed": false,
+        "streak": 3,
+        "category": "mindfulness",
+        "priority": "medium",
+        "preferredTime": "22:00",
+        "estimatedMinutes": 10,
+        "createdAt": "2026-02-10T21:00:00.000Z"
+      },
+      {
+        "id": "t5",
+        "userId": "1",
+        "label": "Drink 8 glasses of water",
+        "description": "Track intake throughout the day",
+        "period": "daily",
+        "completed": false,
+        "streak": 15,
+        "category": "health",
+        "priority": "low",
+        "preferredTime": "12:00",
+        "estimatedMinutes": 5,
+        "createdAt": "2026-01-18T07:00:00.000Z"
+      },
+      {
+        "id": "t6",
+        "userId": "1",
+        "label": "Review weekly goals",
+        "description": "Sunday planning session",
+        "period": "weekly",
+        "completed": false,
+        "streak": 4,
+        "category": "growth",
+        "priority": "high",
+        "preferredTime": "09:00",
+        "estimatedMinutes": 30,
+        "createdAt": "2026-07-28T09:00:00.000Z"
+      },
+      {
+        "id": "t7",
+        "userId": "1",
+        "label": "Deep clean workspace",
+        "description": "Desk, cables, and digital files",
+        "period": "weekly",
+        "completed": true,
+        "streak": 6,
+        "category": "focus",
+        "priority": "medium",
+        "preferredTime": "10:00",
+        "estimatedMinutes": 60,
+        "createdAt": "2026-07-29T10:00:00.000Z"
+      },
+      {
+        "id": "t8",
+        "userId": "1",
+        "label": "Call family or close friend",
+        "description": "Meaningful catch-up, not just texts",
+        "period": "weekly",
+        "completed": false,
+        "streak": 2,
+        "category": "relationships",
+        "priority": "medium",
+        "preferredTime": "18:00",
+        "estimatedMinutes": 20,
+        "createdAt": "2026-08-01T18:00:00.000Z"
+      },
+      {
+        "id": "t9",
+        "userId": "1",
+        "label": "Review monthly budget",
+        "description": "Spending, savings, and subscriptions",
+        "period": "monthly",
+        "completed": false,
+        "streak": 3,
+        "category": "finance",
+        "priority": "high",
+        "preferredTime": "19:00",
+        "estimatedMinutes": 45,
+        "createdAt": "2026-08-01T08:00:00.000Z"
+      },
+      {
+        "id": "t10",
+        "userId": "1",
+        "label": "Finish one book",
+        "description": "Non-fiction or personal development",
+        "period": "monthly",
+        "completed": false,
+        "streak": 2,
+        "category": "growth",
+        "priority": "medium",
+        "preferredTime": "20:00",
+        "estimatedMinutes": 600,
+        "createdAt": "2026-08-02T12:00:00.000Z"
+      },
+      {
+        "id": "t11",
+        "userId": "1",
+        "label": "Deep clean entire home",
+        "description": "Rooms, floors, and declutter",
+        "period": "monthly",
+        "completed": true,
+        "streak": 1,
+        "category": "health",
+        "priority": "low",
+        "preferredTime": "11:00",
+        "estimatedMinutes": 120,
+        "createdAt": "2026-08-03T14:00:00.000Z"
+      },
+      {
+        "id": "t12",
+        "userId": "1",
+        "label": "Annual health checkup",
+        "description": "Doctor visit + blood work",
+        "period": "yearly",
+        "completed": false,
+        "streak": 1,
+        "category": "health",
+        "priority": "high",
+        "preferredTime": "08:30",
+        "estimatedMinutes": 90,
+        "createdAt": "2026-01-10T08:00:00.000Z"
+      },
+      {
+        "id": "t13",
+        "userId": "1",
+        "label": "Set yearly vision & goals",
+        "description": "Reflect and plan the year ahead",
+        "period": "yearly",
+        "completed": true,
+        "streak": 1,
+        "category": "growth",
+        "priority": "high",
+        "preferredTime": "09:00",
+        "estimatedMinutes": 120,
+        "createdAt": "2026-01-05T08:00:00.000Z"
+      },
+      {
+        "id": "t14",
+        "userId": "1",
+        "label": "Review insurance & finances",
+        "description": "Policies, investments, and emergency fund",
+        "period": "yearly",
+        "completed": false,
+        "streak": 0,
+        "category": "finance",
+        "priority": "medium",
+        "preferredTime": "14:00",
+        "estimatedMinutes": 60,
+        "createdAt": "2026-02-01T08:00:00.000Z"
+      }
+    ],
+    "default": [
+      {
+        "id": "t-default-1",
+        "userId": "default",
+        "label": "Morning workout",
+        "period": "daily",
+        "completed": false,
+        "streak": 0,
+        "category": "health",
+        "createdAt": "2026-08-04T08:00:00.000Z"
+      },
+      {
+        "id": "t-default-2",
+        "userId": "default",
+        "label": "Review weekly goals",
+        "period": "weekly",
+        "completed": false,
+        "streak": 0,
+        "category": "growth",
+        "createdAt": "2026-08-04T08:00:00.000Z"
+      }
+    ]
+  },
+  "habits": {
+    "1": [
+      {
+        "id": "h1",
+        "userId": "1",
+        "name": "Meditation",
+        "description": "10 minutes of mindfulness each morning",
+        "frequency": "daily",
+        "streak": 14,
+        "longestStreak": 21,
+        "completionRate": 92,
+        "completedToday": true,
+        "category": "mindfulness",
+        "color": "#a78bfa"
+      },
+      {
+        "id": "h2",
+        "userId": "1",
+        "name": "Cold shower",
+        "description": "2-minute cold finish after warm shower",
+        "frequency": "daily",
+        "streak": 7,
+        "longestStreak": 12,
+        "completionRate": 78,
+        "completedToday": false,
+        "category": "health",
+        "color": "#38bdf8"
+      },
+      {
+        "id": "h3",
+        "userId": "1",
+        "name": "Deep work block",
+        "description": "90 minutes of focused work without distractions",
+        "frequency": "weekdays",
+        "streak": 5,
+        "longestStreak": 10,
+        "completionRate": 85,
+        "completedToday": true,
+        "category": "focus",
+        "color": "#fbbf24"
+      },
+      {
+        "id": "h4",
+        "userId": "1",
+        "name": "Evening review",
+        "description": "Review the day and plan tomorrow",
+        "frequency": "daily",
+        "streak": 3,
+        "longestStreak": 9,
+        "completionRate": 70,
+        "completedToday": false,
+        "category": "growth",
+        "color": "#34d399"
+      }
+    ],
+    "default": []
+  },
+  "routines": {
+    "1": [
+      {
+        "id": "r1",
+        "userId": "1",
+        "name": "Morning Routine",
+        "description": "Start the day with intention",
+        "steps": [
+          { "id": "s1", "label": "Make bed", "completed": true },
+          { "id": "s2", "label": "Hydrate", "completed": true },
+          { "id": "s3", "label": "Workout", "completed": false },
+          { "id": "s4", "label": "Shower", "completed": false },
+          { "id": "s5", "label": "Plan the day", "completed": false }
+        ],
+        "completedToday": false
+      },
+      {
+        "id": "r2",
+        "userId": "1",
+        "name": "Evening Wind-down",
+        "description": "Prepare for restful sleep",
+        "steps": [
+          { "id": "s6", "label": "No screens after 9pm", "completed": false },
+          { "id": "s7", "label": "Journal", "completed": false },
+          { "id": "s8", "label": "Read fiction", "completed": false }
+        ],
+        "completedToday": false
+      }
+    ],
+    "default": []
+  },
+  "analytics": {
+    "1": {
+      "weeklyActivity": [72, 85, 60, 90, 45, 80, 50],
+      "monthlyScores": [
+        { "month": "May", "score": 78 },
+        { "month": "Jun", "score": 82 },
+        { "month": "Jul", "score": 85 },
+        { "month": "Aug", "score": 87 }
+      ],
+      "streakHistory": [
+        { "date": "2026-07-29", "score": 80 },
+        { "date": "2026-07-30", "score": 85 },
+        { "date": "2026-07-31", "score": 75 },
+        { "date": "2026-08-01", "score": 90 },
+        { "date": "2026-08-02", "score": 60 },
+        { "date": "2026-08-03", "score": 85 },
+        { "date": "2026-08-04", "score": 50 }
+      ],
+      "categoryBreakdown": [
+        { "category": "Health", "completed": 45, "total": 50, "color": "#38bdf8" },
+        { "category": "Focus", "completed": 38, "total": 45, "color": "#fbbf24" },
+        { "category": "Growth", "completed": 42, "total": 48, "color": "#34d399" },
+        { "category": "Mindfulness", "completed": 35, "total": 40, "color": "#a78bfa" }
+      ],
+      "insights": [
+        "You're most consistent on weekdays — your discipline score is 23% higher Mon–Fri.",
+        "Morning commitments have a 94% completion rate. Consider scheduling harder tasks before noon.",
+        "Your meditation streak is your strongest habit at 14 days. Keep the momentum.",
+        "Focus category dipped 12% last week. Try batching deep work into one morning block."
+      ],
+      "summary": {
+        "totalCommitmentsCompleted": 160,
+        "currentStreak": 12,
+        "longestStreak": 21,
+        "averageScore": 87,
+        "daysTracked": 142
+      }
+    },
+    "default": {
+      "weeklyActivity": [0, 0, 0, 0, 0, 0, 0],
+      "monthlyScores": [],
+      "streakHistory": [],
+      "categoryBreakdown": [],
+      "insights": ["Start tracking tasks to unlock personalized insights."],
+      "summary": {
+        "totalCommitmentsCompleted": 0,
+        "currentStreak": 0,
+        "longestStreak": 0,
+        "averageScore": 0,
+        "daysTracked": 0
+      }
+    }
+  }
+}
