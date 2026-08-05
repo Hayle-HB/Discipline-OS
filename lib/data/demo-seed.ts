@@ -108,7 +108,7 @@ export function enrichTaskCompletionHistory(task: Task): Task {
   return { ...task, completionLog: log };
 }
 
-function needsTaskReseed(existing: Task[] | undefined, template: Task[]): boolean {
+function needsReseed<T>(existing: T[] | undefined, template: T[]): boolean {
   if (!existing || existing.length === 0) return true;
   return existing.length < template.length;
 }
@@ -121,15 +121,15 @@ export function ensureUserDemoBucket(
   const templateHabits = getBaselineHabits();
   const templateRoutines = getBaselineRoutines();
 
-  if (needsTaskReseed(store.tasks[userId], templateTasks)) {
+  if (needsReseed(store.tasks[userId], templateTasks)) {
     store.tasks[userId] = cloneTasksForUser(templateTasks, userId);
   }
 
-  if (needsTaskReseed(store.habits[userId], templateHabits)) {
+  if (needsReseed(store.habits[userId], templateHabits)) {
     store.habits[userId] = cloneHabitsForUser(templateHabits, userId);
   }
 
-  if (needsTaskReseed(store.routines[userId], templateRoutines)) {
+  if (needsReseed(store.routines[userId], templateRoutines)) {
     store.routines[userId] = cloneRoutinesForUser(templateRoutines, userId);
   }
 
