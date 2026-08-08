@@ -8,7 +8,7 @@ import type {
   Routine,
   Task,
 } from "@/lib/data/types";
-import { seedCompletionLog } from "@/lib/data/task-completions";
+import { seedCompletionLog, normalizeCompletionLog } from "@/lib/data/task-completions";
 
 export const DEMO_TEMPLATE_USER_ID = "1";
 
@@ -39,13 +39,15 @@ export function getBaselineAnalytics(): AnalyticsData {
 
 /** Clone template tasks for a new user bucket (per-user isolated data) */
 export function cloneTasksForUser(tasks: Task[], userId: string): Task[] {
-  return structuredClone(tasks).map((task) => ({
-    ...task,
-    userId,
-    completionLog: task.completionLog
-      ? structuredClone(task.completionLog)
-      : undefined,
-  }));
+  return structuredClone(tasks).map((task) =>
+    enrichTaskCompletionHistory({
+      ...task,
+      userId,
+      completionLog: task.completionLog
+        ? structuredClone(task.completionLog)
+        : undefined,
+    })
+  );
 }
 
 export function cloneHabitsForUser(habits: Habit[], userId: string): Habit[] {
@@ -65,15 +67,29 @@ function historyStatus(taskId: string, dayOffset: number): "done" | "missed" | n
   return null;
 }
 
-/** Fill ~30 days of daily task history for calendar + richer demo */
+/** Minimum log entries before we treat history as fully initialized */
+const MIN_PERSISTED_HISTORY = 5;
+
+/** Fill demo calendar history — merges with any existing user entries */
 export function enrichTaskCompletionHistory(task: Task): Task {
-  const log = { ...seedCompletionLog(task) };
+  const existing = normalizeCompletionLog(task.completionLog);
+  const hasFullHistory = Object.keys(existing).length >= MIN_PERSISTED_HISTORY;
+
+  const backbone = seedCompletionLog({ ...task, completionLog: undefined });
+  const log = hasFullHistory ? existing : { ...backbone, ...existing };
+
   if (task.period !== "daily") {
     return { ...task, completionLog: log };
   }
 
+  if (hasFullHistory) {
+    return { ...task, completionLog: log };
+  }
+
   const today = new Date();
-  for (let i = 0; i < 30; i++) {
+  const historyStart = Math.max(task.streak + 1, 4);
+
+  for (let i = historyStart; i < 30; i++) {
     const date = addDays(today, -i);
     const key = toDateKey(date);
     if (log[key]) continue;
@@ -142,5 +158,11 @@ export function ensureUserDemoBucket(
 
 /** Reset runtime store back to demo.json baseline (dev / demo reset) */
 export function createFreshDemoStore(): DemoDataFile {
-  return structuredClone(baseline);
+  const store = structuredClone(baseline);
+  for (const userId of Object.keys(store.tasks)) {
+    store.tasks[userId] = store.tasks[userId].map((task) =>
+      enrichTaskCompletionHistory(task)
+    );
+  }
+  return store;
 }

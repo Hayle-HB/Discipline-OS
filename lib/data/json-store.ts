@@ -35,14 +35,13 @@ function ensureUserData(userId: string) {
 
 function ensureTasks(userId: string): Task[] {
   ensureUserData(userId);
-  return store.tasks[userId].map((t) =>
-    normalizeTask(
-      enrichTaskCompletionHistory({
-        ...t,
-        userId,
-      })
-    )
-  );
+  return store.tasks[userId].map((t) => {
+    const enriched = enrichTaskCompletionHistory({ ...t, userId });
+    if (enriched.completionLog !== t.completionLog) {
+      t.completionLog = enriched.completionLog;
+    }
+    return normalizeTask(enriched);
+  });
 }
 
 function ensureHabits(userId: string): Habit[] {
@@ -141,11 +140,7 @@ export const jsonDataProvider: DataProvider = {
     const task = store.tasks[userId]?.find((t) => t.id === id);
     if (!task) return null;
 
-    const updated = applyTaskCompletion(
-      normalizeTask({ ...task, userId }),
-      status,
-      date
-    );
+    const updated = applyTaskCompletion({ ...task, userId }, status, date);
     task.completionLog = updated.completionLog;
     task.completed = updated.completed;
     task.streak = updated.streak;
@@ -153,7 +148,7 @@ export const jsonDataProvider: DataProvider = {
     const stats = computeDashboardStats(this.getTasks(userId));
     updateWeeklyActivity(userId, stats.progress);
 
-    return { ...task, userId };
+    return normalizeTask({ ...task, userId });
   },
 
   toggleTask(userId, id) {

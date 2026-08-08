@@ -62,22 +62,33 @@ export function isTaskDoneOnDate(task: Task, dateKey: string): boolean {
   return getTaskStatusForDate(task, dateKey) === "done";
 }
 
-/** Walk consecutive period keys backward counting "done" entries */
+/**
+ * Current streak = consecutive "done" periods ending at the reference period.
+ * - Today done → includes today.
+ * - Today pending → counts from yesterday (grace until you log today).
+ * - Today missed → streak is broken (0).
+ */
 export function computeTaskStreak(
   task: Pick<Task, "period" | "completionLog">,
   referenceDate: Date = new Date()
 ): number {
   const log = normalizeCompletionLog(task.completionLog);
+  const todayPeriodKey = getPeriodLogKey(parseDateKey(todayKey()), task.period);
   let cursor = new Date(referenceDate);
-  const today = todayKey();
   const refKey = getPeriodLogKey(cursor, task.period);
-  const todayPeriodKey = getPeriodLogKey(parseDateKey(today), task.period);
+  const refEntry = log[refKey];
 
-  if (log[refKey]?.status !== "done" && refKey === todayPeriodKey) {
-    cursor =
-      task.period === "daily"
-        ? addDays(cursor, -1)
-        : stepPeriodBack(cursor, task.period);
+  if (refKey === todayPeriodKey) {
+    if (refEntry?.status === "missed") {
+      return 0;
+    }
+    if (refEntry?.status !== "done") {
+      cursor = stepPeriodBack(cursor, task.period);
+    }
+  } else if (refEntry?.status === "missed") {
+    return 0;
+  } else if (refEntry?.status !== "done") {
+    cursor = stepPeriodBack(cursor, task.period);
   }
 
   let streak = 0;
@@ -85,10 +96,7 @@ export function computeTaskStreak(
     const key = getPeriodLogKey(cursor, task.period);
     if (log[key]?.status === "done") {
       streak++;
-      cursor =
-        task.period === "daily"
-          ? addDays(cursor, -1)
-          : stepPeriodBack(cursor, task.period);
+      cursor = stepPeriodBack(cursor, task.period);
     } else {
       break;
     }
@@ -97,7 +105,7 @@ export function computeTaskStreak(
   return streak;
 }
 
-function stepPeriodBack(date: Date, period: TaskPeriod): Date {
+export function stepPeriodBack(date: Date, period: TaskPeriod): Date {
   switch (period) {
     case "weekly":
       return addDays(date, -7);
@@ -124,13 +132,14 @@ export function normalizeTask(task: Task, referenceDate = new Date()): Task {
   };
 }
 
-/** Seed demo tasks that have streak but no log yet */
+/** Seed consecutive "done" periods for demo tasks that have no log yet */
 export function seedCompletionLog(task: Task): CompletionLog {
   const log = normalizeCompletionLog(task.completionLog);
   if (Object.keys(log).length > 0 || task.streak <= 0) return log;
 
-  let cursor = new Date();
   const period = task.period;
+  let cursor = new Date();
+  let remaining = task.streak;
 
   if (task.completed) {
     log[getPeriodLogKey(cursor, period)] = {
@@ -138,14 +147,17 @@ export function seedCompletionLog(task: Task): CompletionLog {
       completedAt: new Date().toISOString(),
       durationMinutes: task.estimatedMinutes,
     };
+    remaining = task.streak - 1;
     cursor = stepPeriodBack(cursor, period);
   } else {
     cursor = stepPeriodBack(cursor, period);
   }
 
-  const remaining = task.completed ? task.streak - 1 : task.streak;
   for (let i = 0; i < remaining; i++) {
-    log[getPeriodLogKey(cursor, period)] = { status: "done" };
+    const key = getPeriodLogKey(cursor, period);
+    if (!log[key]) {
+      log[key] = { status: "done" };
+    }
     cursor = stepPeriodBack(cursor, period);
   }
 
@@ -162,7 +174,7 @@ export function applyTaskCompletion(
   const previous = completionLog[periodKey];
 
   if (previous?.status === status) {
-    return normalizeTask(task);
+    return normalizeTask(task, parseDateKey(dateKey));
   }
 
   if (status === "done") {
@@ -175,7 +187,7 @@ export function applyTaskCompletion(
     completionLog[periodKey] = { status: "missed" };
   }
 
-  return normalizeTask({ ...task, completionLog });
+  return normalizeTask({ ...task, completionLog }, parseDateKey(dateKey));
 }
 
 export interface DayMetrics {
