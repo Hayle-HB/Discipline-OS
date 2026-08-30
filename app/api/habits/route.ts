@@ -3,7 +3,7 @@ import { requireUserId } from "@/lib/api/server-auth";
 import { apiSuccess } from "@/lib/api/response";
 
 export async function GET(request: Request) {
-  const userIdOrError = requireUserId(request);
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
   const habits = getDataProvider().getHabits(userIdOrError);

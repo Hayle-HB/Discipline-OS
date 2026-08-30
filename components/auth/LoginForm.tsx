@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, storeAuthSession } from "@/lib/api";
 import { ApiError } from "@/lib/api/types";
+import { validateLoginInput } from "@/lib/api/validation";
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,12 +26,20 @@ export function LoginForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    const validationError = validateLoginInput(email, password);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const { token, user } = await login({ email, password, rememberMe });
       storeAuthSession(token, user, rememberMe);
       router.push("/dashboard");
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -54,6 +63,8 @@ export function LoginForm() {
             name="email"
             type="email"
             autoComplete="email"
+            inputMode="email"
+            spellCheck={false}
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +111,7 @@ export function LoginForm() {
             htmlFor="remember"
             className="cursor-pointer text-sm font-normal text-muted-foreground"
           >
-            Remember me
+            Remember me for 7 days
           </Label>
         </div>
 
@@ -111,14 +122,15 @@ export function LoginForm() {
               Signing in…
             </>
           ) : (
-            "Login"
+            "Sign in"
           )}
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        Demo: <span className="text-foreground">demo@discipline.os</span> /{" "}
-        <span className="text-foreground">password123</span>
+      <p className="mt-4 rounded-lg border border-border/60 bg-secondary/20 px-3 py-2 text-center text-xs text-muted-foreground">
+        Try the demo account:{" "}
+        <span className="font-medium text-foreground">demo@discipline.os</span>{" "}
+        / <span className="font-medium text-foreground">password123</span>
       </p>
 
       <div className="relative my-6">

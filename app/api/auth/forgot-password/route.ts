@@ -1,3 +1,4 @@
+import { proxyAuthRoute } from "@/lib/api/backend";
 import { TEMP_API } from "@/lib/api/constants";
 import { requestPasswordReset } from "@/lib/api/mock-users";
 import { apiError, apiSuccess } from "@/lib/api/response";
@@ -11,6 +12,9 @@ function delay(ms: number) {
 }
 
 export async function POST(request: Request) {
+  const proxied = await proxyAuthRoute("/api/auth/forgot-password", request);
+  if (proxied) return proxied;
+
   try {
     const body = (await request.json()) as ForgotPasswordPayload;
     const { email } = body;
@@ -24,10 +28,7 @@ export async function POST(request: Request) {
       return apiError("Please enter a valid email address.", 400, "VALIDATION_ERROR");
     }
 
-    // Simulate email send delay
     await delay(TEMP_API.forgotPasswordDelayMs);
-
-    // Always succeed — don't reveal whether the email exists
     requestPasswordReset(email);
 
     const response: ForgotPasswordResponse = {

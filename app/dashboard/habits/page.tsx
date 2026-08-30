@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Flame, TrendingUp } from "lucide-react";
 
-import {
-  DashboardLoading,
-  useDashboardAuth,
-} from "@/components/dashboard/DashboardLoading";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { DashboardContentLoading } from "@/components/dashboard/DashboardLoading";
 import { TaskActionRow } from "@/components/dashboard/tasks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData, recordTaskCompletion } from "@/lib/api/tasks";
@@ -26,7 +22,6 @@ function periodStats(tasks: Task[]) {
 }
 
 export default function HabitsPage() {
-  const { user, isAuthLoading } = useDashboardAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +40,8 @@ export default function HabitsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthLoading && user) loadData();
-  }, [isAuthLoading, user, loadData]);
+    loadData();
+  }, [loadData]);
 
   async function handleAction(id: string, status: TaskDayStatus) {
     setBusyId(id);
@@ -63,8 +58,8 @@ export default function HabitsPage() {
     }
   }
 
-  if (isAuthLoading || isLoading) return <DashboardLoading />;
-  if (!user || !data) return null;
+  if (isLoading) return <DashboardContentLoading />;
+  if (!data) return null;
 
   const periodTasks = data.tasksByPeriod[activePeriod];
   const stats = periodStats(periodTasks);
@@ -72,8 +67,7 @@ export default function HabitsPage() {
   const PeriodIcon = theme.icon;
 
   return (
-    <DashboardShell user={user}>
-      <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Habits
@@ -189,7 +183,6 @@ export default function HabitsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </DashboardShell>
+    </div>
   );
 }

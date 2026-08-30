@@ -1,3 +1,4 @@
+import { proxyBackendRoute } from "@/lib/api/backend";
 import { getDataProvider } from "@/lib/data";
 import { requireUserId } from "@/lib/api/server-auth";
 import { apiError, apiSuccess } from "@/lib/api/response";
@@ -10,10 +11,12 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userIdOrError = requireUserId(request);
-  if (userIdOrError instanceof Response) return userIdOrError;
-
   const { id } = await params;
+  const proxied = await proxyBackendRoute(`/api/tasks/${id}`, request);
+  if (proxied) return proxied;
+
+  const userIdOrError = await requireUserId(request);
+  if (userIdOrError instanceof Response) return userIdOrError;
 
   try {
     const body = (await request.json().catch(() => ({}))) as RecordTaskCompletionPayload;
@@ -44,10 +47,14 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userIdOrError = requireUserId(request);
-  if (userIdOrError instanceof Response) return userIdOrError;
-
   const { id } = await params;
+  const proxied = await proxyBackendRoute(`/api/tasks/${id}`, request, {
+    method: "PUT",
+  });
+  if (proxied) return proxied;
+
+  const userIdOrError = await requireUserId(request);
+  if (userIdOrError instanceof Response) return userIdOrError;
 
   try {
     const body = (await request.json()) as UpdateTaskPayload;
@@ -79,10 +86,15 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userIdOrError = requireUserId(request);
+  const { id } = await params;
+  const proxied = await proxyBackendRoute(`/api/tasks/${id}`, request, {
+    method: "DELETE",
+  });
+  if (proxied) return proxied;
+
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
-  const { id } = await params;
   const deleted = getDataProvider().deleteTask(userIdOrError, id);
 
   if (!deleted) {

@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  DashboardLoading,
-  useDashboardAuth,
-} from "@/components/dashboard/DashboardLoading";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { DashboardContentLoading } from "@/components/dashboard/DashboardLoading";
 import { TaskManageView } from "@/components/dashboard/tasks";
 import {
   createTask,
@@ -18,7 +14,6 @@ import type { CreateTaskPayload, DashboardData, UpdateTaskPayload } from "@/lib/
 import { withUpdatedTasks } from "@/lib/data/dashboard";
 
 export default function ManagePage() {
-  const { user, isAuthLoading } = useDashboardAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +30,8 @@ export default function ManagePage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthLoading && user) loadTasks();
-  }, [isAuthLoading, user, loadTasks]);
+    loadTasks();
+  }, [loadTasks]);
 
   async function handleAdd(payload: CreateTaskPayload) {
     const created = await createTask(payload);
@@ -68,12 +63,11 @@ export default function ManagePage() {
     });
   }
 
-  if (isAuthLoading || isLoading) return <DashboardLoading />;
-  if (!user || !data) return null;
+  if (isLoading) return <DashboardContentLoading />;
+  if (!data) return null;
 
   return (
-    <DashboardShell user={user}>
-      <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Manage
@@ -98,7 +92,6 @@ export default function ManagePage() {
             onDelete={handleDelete}
           />
         </div>
-      </div>
-    </DashboardShell>
+    </div>
   );
 }

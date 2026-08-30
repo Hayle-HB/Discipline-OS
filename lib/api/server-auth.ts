@@ -1,19 +1,14 @@
-import { parseMockToken } from "@/lib/api/mock-users";
+import { getBearerToken, parseUserIdFromToken } from "@/lib/api/token";
 import { apiError } from "@/lib/api/response";
 
-export function getUserIdFromRequest(request: Request): string | null {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.slice(7);
-  return parseMockToken(token);
+export async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  const token = getBearerToken(request);
+  if (!token) return null;
+  return parseUserIdFromToken(token);
 }
 
-export function requireUserId(request: Request): string | Response {
-  const userId = getUserIdFromRequest(request);
+export async function requireUserId(request: Request): Promise<string | Response> {
+  const userId = await getUserIdFromRequest(request);
 
   if (!userId) {
     return apiError("Missing or invalid authorization token.", 401, "UNAUTHORIZED");

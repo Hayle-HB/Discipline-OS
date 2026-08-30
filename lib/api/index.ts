@@ -1,4 +1,5 @@
 export { API_CONFIG } from "@/lib/api/config";
+export { isBackendEnabled, getBackendBaseUrl, proxyBackendRoute } from "@/lib/api/backend";
 export { TEMP_API } from "@/lib/api/constants";
 export { apiClient, apiClientWithAuth } from "@/lib/api/client";
 export {
@@ -12,7 +13,14 @@ export {
   getStoredUser,
   storeAuthSession,
   clearAuthSession,
+  isAuthenticated,
 } from "@/lib/api/auth";
+export {
+  normalizeEmail,
+  isValidEmail,
+  validateLoginInput,
+  validateRegisterInput,
+} from "@/lib/api/validation";
 export {
   getDashboardData,
   createTask,

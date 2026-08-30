@@ -9,16 +9,11 @@ import {
   InsightsPanel,
   MonthlyTrend,
 } from "@/components/dashboard/AnalyticsPanels";
-import {
-  DashboardLoading,
-  useDashboardAuth,
-} from "@/components/dashboard/DashboardLoading";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { DashboardContentLoading } from "@/components/dashboard/DashboardLoading";
 import { getAnalyticsData } from "@/lib/api/habits";
 import type { AnalyticsData } from "@/lib/data/types";
 
 export default function AnalyticsPage() {
-  const { user, isAuthLoading } = useDashboardAuth();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,15 +26,14 @@ export default function AnalyticsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthLoading && user) loadAnalytics();
-  }, [isAuthLoading, user, loadAnalytics]);
+    loadAnalytics();
+  }, [loadAnalytics]);
 
-  if (isAuthLoading || isLoading) return <DashboardLoading />;
-  if (!user || !data) return null;
+  if (isLoading) return <DashboardContentLoading />;
+  if (!data) return null;
 
   return (
-    <DashboardShell user={user}>
-      <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Personal Analytics
@@ -62,7 +56,6 @@ export default function AnalyticsPage() {
             <InsightsPanel insights={data.insights} />
           </div>
         </div>
-      </div>
-    </DashboardShell>
+    </div>
   );
 }

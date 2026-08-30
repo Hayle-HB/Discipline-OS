@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getCurrentUser, getStoredToken, getStoredUser } from "@/lib/api";
+import {
+  clearAuthSession,
+  getCurrentUser,
+  getStoredToken,
+  getStoredUser,
+} from "@/lib/api";
 import type { AuthUser } from "@/lib/api/types";
 
 export function useAuth() {
@@ -15,6 +20,7 @@ export function useAuth() {
     const token = getStoredToken();
 
     if (!token) {
+      setIsLoading(false);
       router.replace("/login");
       return;
     }
@@ -27,6 +33,7 @@ export function useAuth() {
     getCurrentUser()
       .then(setUser)
       .catch(() => {
+        clearAuthSession();
         router.replace("/login");
       })
       .finally(() => setIsLoading(false));

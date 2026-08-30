@@ -1,15 +1,19 @@
+import { proxyAuthRoute } from "@/lib/api/backend";
 import { getMockUserById, parseMockToken } from "@/lib/api/mock-users";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { getBearerToken, parseUserIdFromToken } from "@/lib/api/token";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
+  const proxied = await proxyAuthRoute("/api/auth/me", request, { method: "GET" });
+  if (proxied) return proxied;
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  const token = getBearerToken(request);
+
+  if (!token) {
     return apiError("Missing or invalid authorization token.", 401, "UNAUTHORIZED");
   }
 
-  const token = authHeader.slice(7);
-  const userId = parseMockToken(token);
+  const userId = await parseUserIdFromToken(token);
 
   if (!userId) {
     return apiError("Invalid or expired token.", 401, "INVALID_TOKEN");
@@ -27,7 +31,8 @@ export async function GET(request: Request) {
     });
   }
 
-  const user = getMockUserById(userId);
+  const mockUserId = parseMockToken(token);
+  const user = mockUserId ? getMockUserById(mockUserId) : null;
 
   if (!user) {
     return apiError("User not found.", 404, "USER_NOT_FOUND");

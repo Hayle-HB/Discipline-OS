@@ -1,13 +1,18 @@
+import { proxyAuthRoute } from "@/lib/api/backend";
 import { createMockToken, findMockUser } from "@/lib/api/mock-users";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import type { LoginPayload, LoginResponse } from "@/lib/api/types";
 
 export async function POST(request: Request) {
+  const proxied = await proxyAuthRoute("/api/auth/login", request);
+  if (proxied) return proxied;
+
   try {
     const body = (await request.json()) as LoginPayload;
-    const { email, password } = body;
+    const email = body.email?.trim() ?? "";
+    const password = body.password?.trim() ?? "";
 
-    if (!email?.trim() || !password?.trim()) {
+    if (!email || !password) {
       return apiError("Email and password are required.", 400, "VALIDATION_ERROR");
     }
 

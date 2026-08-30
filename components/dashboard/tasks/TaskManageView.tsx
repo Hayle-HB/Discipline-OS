@@ -12,9 +12,11 @@ import {
   TaskManageCard,
   useFilteredTasks,
 } from "@/components/dashboard/tasks/manage-ui";
+import { AuthAlert } from "@/components/auth/AuthAlert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { groupTasksByPeriod } from "@/lib/data/task-periods";
+import { ApiError } from "@/lib/api/types";
 import type { CreateTaskPayload, Task, TaskPeriod, UpdateTaskPayload } from "@/lib/data/types";
 
 interface TaskManageViewProps {
@@ -22,6 +24,10 @@ interface TaskManageViewProps {
   onAdd: (payload: CreateTaskPayload) => Promise<void>;
   onUpdate: (id: string, payload: UpdateTaskPayload) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+}
+
+function actionErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof ApiError ? err.message : fallback;
 }
 
 export function TaskManageView({
@@ -38,19 +44,30 @@ export function TaskManageView({
   const [editValues, setEditValues] = useState(emptyFormValues());
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const tasksByPeriod = groupTasksByPeriod(tasks);
   const filteredTasks = useFilteredTasks(tasks, periodFilter);
+
+  function flashSuccess(message: string) {
+    setSuccess(message);
+    setTimeout(() => setSuccess(null), 3000);
+  }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!addValues.label.trim()) return;
 
+    setError(null);
     setIsAdding(true);
     try {
       await onAdd(formValuesToPayload(addValues));
       setAddValues(emptyFormValues());
       setShowAddForm(false);
+      flashSuccess("Task added.");
+    } catch (err) {
+      setError(actionErrorMessage(err, "Could not add task. Please try again."));
     } finally {
       setIsAdding(false);
     }
@@ -60,6 +77,7 @@ export function TaskManageView({
     setEditingId(task.id);
     setEditValues(formValuesFromTask(task));
     setDeleteConfirmId(null);
+    setError(null);
   }
 
   function cancelEdit() {
@@ -69,21 +87,29 @@ export function TaskManageView({
   async function saveEdit(id: string) {
     if (!editValues.label.trim()) return;
 
+    setError(null);
     setBusyId(id);
     try {
       await onUpdate(id, formValuesToPayload(editValues));
       setEditingId(null);
+      flashSuccess("Task updated.");
+    } catch (err) {
+      setError(actionErrorMessage(err, "Could not save changes. Please try again."));
     } finally {
       setBusyId(null);
     }
   }
 
   async function confirmDelete(id: string) {
+    setError(null);
     setBusyId(id);
     try {
       await onDelete(id);
       setDeleteConfirmId(null);
       if (editingId === id) setEditingId(null);
+      flashSuccess("Task deleted.");
+    } catch (err) {
+      setError(actionErrorMessage(err, "Could not delete task. Please try again."));
     } finally {
       setBusyId(null);
     }
@@ -91,7 +117,9 @@ export function TaskManageView({
 
   return (
     <div className="space-y-6">
-      {/* Quick stats */}
+      {error && <AuthAlert variant="error" message={error} />}
+      {success && <AuthAlert variant="success" message={success} />}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(["daily", "weekly", "monthly", "yearly"] as const).map((period) => {
           const count = tasksByPeriod[period].length;
@@ -107,12 +135,14 @@ export function TaskManageView({
         })}
       </div>
 
-      {/* Add task */}
       <Card className="overflow-hidden border-border/60 bg-card/50 backdrop-blur-sm">
         {!showAddForm ? (
           <button
             type="button"
-            onClick={() => setShowAddForm(true)}
+            onClick={() => {
+              setShowAddForm(true);
+              setError(null);
+            }}
             className="flex w-full items-center gap-4 px-5 py-5 text-left transition-colors hover:bg-secondary/30"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-foreground text-background">
@@ -170,12 +200,16 @@ export function TaskManageView({
         )}
       </Card>
 
-      {/* Task list */}
       <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
         <CardHeader className="space-y-4 pb-3">
-          <div className="flex items-center gap-2">
-            <ListTodo className="size-4 text-muted-foreground" />
-            <CardTitle className="text-base font-medium">Your tasks</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <ListTodo className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base font-medium">Your tasks</CardTitle>
+            </div>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {tasks.length} total
+            </span>
           </div>
           <ManagePeriodTabs
             tasksByPeriod={tasksByPeriod}

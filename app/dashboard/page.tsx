@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  DashboardLoading,
-  useDashboardAuth,
+  DashboardContentLoading,
 } from "@/components/dashboard/DashboardLoading";
+import { useDashboardUser } from "@/components/dashboard/DashboardLayoutClient";
 import { DailyProgress } from "@/components/dashboard/DailyProgress";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { RoutinesPanel } from "@/components/dashboard/RoutinesPanel";
 import { StatsGrid } from "@/components/dashboard/StatsGrid";
 import { CalendarPanel } from "@/components/dashboard/calendar";
@@ -21,7 +20,7 @@ import { replaceTaskInList, withUpdatedTasks } from "@/lib/data/dashboard";
 import type { DashboardData, TaskDayStatus } from "@/lib/data/types";
 
 export default function DashboardPage() {
-  const { user, isAuthLoading } = useDashboardAuth();
+  const user = useDashboardUser();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +40,8 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthLoading && user) {
-      loadDashboard();
-    }
-  }, [isAuthLoading, user, loadDashboard]);
+    loadDashboard();
+  }, [loadDashboard]);
 
   async function handleAction(id: string, status: TaskDayStatus) {
     const updated = await recordTaskCompletion(id, status);
@@ -72,57 +69,55 @@ export default function DashboardPage() {
     }
   }
 
-  if (isAuthLoading || isLoading) return <DashboardLoading />;
-  if (!user || !data) return null;
+  if (isLoading) return <DashboardContentLoading />;
+  if (!data) return null;
 
   return (
-    <DashboardShell user={user}>
-      <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
-        <DashboardHeader name={user.name} />
+    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+      <DashboardHeader name={user.name} />
 
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
-        <div className="mt-8 space-y-6">
-          <StatsGrid stats={data.stats} />
+      <div className="mt-8 space-y-6">
+        <StatsGrid stats={data.stats} />
 
-          <div className="grid gap-6 lg:grid-cols-5">
-            <div className="space-y-6 lg:col-span-3">
-              <TaskCheckView
-                tasksByPeriod={data.tasksByPeriod}
-                dateKey={selectedDate}
-                onAction={handleAction}
-                onBackToToday={() => setSelectedDate(todayKey())}
+        <div className="grid gap-6 lg:grid-cols-5">
+          <div className="space-y-6 lg:col-span-3">
+            <TaskCheckView
+              tasksByPeriod={data.tasksByPeriod}
+              dateKey={selectedDate}
+              onAction={handleAction}
+              onBackToToday={() => setSelectedDate(todayKey())}
+            />
+            {data.routines && data.routines.length > 0 && (
+              <RoutinesPanel
+                routines={data.routines}
+                onToggleStep={handleToggleRoutineStep}
+                busyStepId={busyStepId}
               />
-              {data.routines && data.routines.length > 0 && (
-                <RoutinesPanel
-                  routines={data.routines}
-                  onToggleStep={handleToggleRoutineStep}
-                  busyStepId={busyStepId}
-                />
-              )}
-            </div>
+            )}
+          </div>
 
-            <div className="space-y-6 lg:col-span-2">
-              <CalendarPanel
-                tasks={data.tasks}
-                compact
-                selectedDate={selectedDate}
-                onSelectedDateChange={setSelectedDate}
-              />
-              <DailyProgress
-                progress={data.stats.progress}
-                completed={data.stats.completed}
-                total={data.stats.total}
-              />
-              <WeekOverview activity={data.weeklyActivity} />
-            </div>
+          <div className="space-y-6 lg:col-span-2">
+            <CalendarPanel
+              tasks={data.tasks}
+              compact
+              selectedDate={selectedDate}
+              onSelectedDateChange={setSelectedDate}
+            />
+            <DailyProgress
+              progress={data.stats.progress}
+              completed={data.stats.completed}
+              total={data.stats.total}
+            />
+            <WeekOverview activity={data.weeklyActivity} />
           </div>
         </div>
       </div>
-    </DashboardShell>
+    </div>
   );
 }

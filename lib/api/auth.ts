@@ -1,5 +1,6 @@
 import { API_CONFIG } from "@/lib/api/config";
 import { apiClient } from "@/lib/api/client";
+import { normalizeEmail } from "@/lib/api/validation";
 import type {
   AuthUser,
   ForgotPasswordPayload,
@@ -60,10 +61,18 @@ export function clearAuthSession(): void {
   sessionStorage.removeItem(AUTH_USER_KEY);
 }
 
+export function isAuthenticated(): boolean {
+  return getStoredToken() !== null;
+}
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   return apiClient<LoginResponse>(authRoutes.login, {
     method: "POST",
-    body: payload,
+    body: {
+      email: normalizeEmail(payload.email),
+      password: payload.password,
+      rememberMe: payload.rememberMe,
+    },
   });
 }
 
@@ -72,7 +81,11 @@ export async function register(
 ): Promise<RegisterResponse> {
   return apiClient<RegisterResponse>(authRoutes.register, {
     method: "POST",
-    body: payload,
+    body: {
+      name: payload.name.trim(),
+      email: normalizeEmail(payload.email),
+      password: payload.password,
+    },
   });
 }
 
@@ -81,7 +94,7 @@ export async function forgotPassword(
 ): Promise<ForgotPasswordResponse> {
   return apiClient<ForgotPasswordResponse>(authRoutes.forgotPassword, {
     method: "POST",
-    body: payload,
+    body: { email: normalizeEmail(payload.email) },
   });
 }
 
@@ -106,10 +119,15 @@ export async function getCurrentUser(): Promise<AuthUser> {
     throw new Error("Not authenticated");
   }
 
-  return apiClient<AuthUser>(authRoutes.me, {
+  const user = await apiClient<AuthUser>(authRoutes.me, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  const storage = localStorage.getItem(AUTH_TOKEN_KEY) ? localStorage : sessionStorage;
+  storage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+
+  return user;
 }
 
 export async function socialLogin(

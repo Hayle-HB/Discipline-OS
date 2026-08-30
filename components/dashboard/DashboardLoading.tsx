@@ -16,6 +16,18 @@ export function DashboardLoading() {
   );
 }
 
+/** Inline loader for page content — keeps sidebar mounted during navigation. */
+export function DashboardContentLoading() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <Loader2
+        className="size-6 animate-spin text-muted-foreground"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
 export function useDashboardAuth() {
   const { user, isLoading } = useAuth();
   return { user, isAuthLoading: isLoading };

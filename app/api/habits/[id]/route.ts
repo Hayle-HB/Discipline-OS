@@ -6,7 +6,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userIdOrError = requireUserId(request);
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
   const { id } = await params;

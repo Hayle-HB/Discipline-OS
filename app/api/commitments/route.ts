@@ -6,7 +6,7 @@ import { apiSuccess } from "@/lib/api/response";
 
 /** @deprecated Use /api/tasks — kept for backward compatibility */
 export async function GET(request: Request) {
-  const userIdOrError = requireUserId(request);
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
   const provider = getDataProvider();

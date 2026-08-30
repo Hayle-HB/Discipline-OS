@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { AuthAlert } from "@/components/auth/AuthAlert";
@@ -12,6 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { register, storeAuthSession } from "@/lib/api";
 import { ApiError } from "@/lib/api/types";
+import { validateRegisterInput } from "@/lib/api/validation";
+import { cn } from "@/lib/utils";
+
+function passwordStrength(password: string): { label: string; level: 0 | 1 | 2 | 3 } {
+  if (password.length === 0) return { label: "", level: 0 };
+  if (password.length < 8) return { label: "Too short", level: 1 };
+  const hasMixed =
+    /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+  if (hasMixed && password.length >= 12) return { label: "Strong", level: 3 };
+  if (password.length >= 8) return { label: "Good", level: 2 };
+  return { label: "Fair", level: 1 };
+}
 
 export function RegisterForm() {
   const router = useRouter();
@@ -22,17 +34,20 @@ export function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const strength = useMemo(() => passwordStrength(password), [password]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const validationError = validateRegisterInput(
+      name,
+      email,
+      password,
+      confirmPassword
+    );
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -42,6 +57,7 @@ export function RegisterForm() {
       const { token, user } = await register({ name, email, password });
       storeAuthSession(token, user, false);
       router.push("/dashboard");
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -70,6 +86,7 @@ export function RegisterForm() {
             onChange={(e) => setName(e.target.value)}
             disabled={isSubmitting}
             required
+            minLength={2}
             aria-required="true"
           />
         </div>
@@ -81,6 +98,8 @@ export function RegisterForm() {
             name="email"
             type="email"
             autoComplete="email"
+            inputMode="email"
+            spellCheck={false}
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -105,6 +124,30 @@ export function RegisterForm() {
             minLength={8}
             aria-required="true"
           />
+          {password.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex gap-1">
+                {[1, 2, 3].map((step) => (
+                  <div
+                    key={step}
+                    className={cn(
+                      "h-1 flex-1 rounded-full transition-colors",
+                      strength.level >= step
+                        ? step === 1
+                          ? "bg-red-400"
+                          : step === 2
+                            ? "bg-amber-400"
+                            : "bg-emerald-400"
+                        : "bg-secondary"
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Password strength: {strength.label}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -121,7 +164,13 @@ export function RegisterForm() {
             required
             minLength={8}
             aria-required="true"
+            aria-invalid={
+              confirmPassword.length > 0 && confirmPassword !== password
+            }
           />
+          {confirmPassword.length > 0 && confirmPassword !== password && (
+            <p className="text-[11px] text-red-400">Passwords do not match.</p>
+          )}
         </div>
 
         <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
@@ -134,6 +183,11 @@ export function RegisterForm() {
             "Create account"
           )}
         </Button>
+
+        <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+          By creating an account, you agree to track your habits responsibly and
+          show up for yourself daily.
+        </p>
       </form>
 
       <div className="relative my-6">

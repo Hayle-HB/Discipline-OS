@@ -1,8 +1,12 @@
+import { proxyAuthRoute } from "@/lib/api/backend";
 import { createMockToken } from "@/lib/api/mock-users";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import type { SocialLoginPayload, SocialLoginResponse } from "@/lib/api/types";
 
 export async function POST(request: Request) {
+  const proxied = await proxyAuthRoute("/api/auth/social", request);
+  if (proxied) return proxied;
+
   try {
     const body = (await request.json()) as SocialLoginPayload;
 
@@ -10,7 +14,6 @@ export async function POST(request: Request) {
       return apiError("Invalid social provider.", 400, "VALIDATION_ERROR");
     }
 
-    // Temporary mock OAuth — replace with real provider flow
     const providerLabel =
       body.provider.charAt(0).toUpperCase() + body.provider.slice(1);
 

@@ -1,3 +1,4 @@
+import { proxyBackendRoute } from "@/lib/api/backend";
 import { computeDashboardStats } from "@/lib/data/compute";
 import { getDataProvider } from "@/lib/data";
 import { groupTasksByPeriod } from "@/lib/data/task-periods";
@@ -6,7 +7,10 @@ import { apiError, apiSuccess } from "@/lib/api/response";
 import type { CreateTaskPayload } from "@/lib/data/types";
 
 export async function GET(request: Request) {
-  const userIdOrError = requireUserId(request);
+  const proxied = await proxyBackendRoute("/api/tasks", request, { method: "GET" });
+  if (proxied) return proxied;
+
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
   const provider = getDataProvider();
@@ -24,7 +28,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const userIdOrError = requireUserId(request);
+  const proxied = await proxyBackendRoute("/api/tasks", request);
+  if (proxied) return proxied;
+
+  const userIdOrError = await requireUserId(request);
   if (userIdOrError instanceof Response) return userIdOrError;
 
   try {

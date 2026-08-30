@@ -1,3 +1,4 @@
+import { proxyAuthRoute } from "@/lib/api/backend";
 import {
   addMockUser,
   createMockToken,
@@ -7,11 +8,16 @@ import { apiError, apiSuccess } from "@/lib/api/response";
 import type { RegisterPayload, RegisterResponse } from "@/lib/api/types";
 
 export async function POST(request: Request) {
+  const proxied = await proxyAuthRoute("/api/auth/register", request);
+  if (proxied) return proxied;
+
   try {
     const body = (await request.json()) as RegisterPayload;
-    const { name, email, password } = body;
+    const name = body.name?.trim() ?? "";
+    const email = body.email?.trim().toLowerCase() ?? "";
+    const password = body.password ?? "";
 
-    if (!name?.trim() || !email?.trim() || !password?.trim()) {
+    if (!name || !email || !password) {
       return apiError(
         "Name, email, and password are required.",
         400,
