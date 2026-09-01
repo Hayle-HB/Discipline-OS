@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   BarChart3,
@@ -8,12 +8,14 @@ import {
   Check,
   Flame,
   ListTodo,
+  MessageCircle,
   Repeat,
   Target,
   X,
 } from "lucide-react";
 
 import { CalendarPanel } from "@/components/dashboard/calendar";
+import { ShareCommentsPanel } from "@/components/sharing/ShareCommentsPanel";
 import { Button } from "@/components/ui/button";
 import { formatDateLabel, todayKey } from "@/lib/data/dates";
 import { getTaskStatusForDate } from "@/lib/data/task-completions";
@@ -27,7 +29,7 @@ interface SharedProgressViewProps {
   hideHeader?: boolean;
 }
 
-type DetailTab = "tasks" | "habits" | "analytics";
+type DetailTab = "tasks" | "habits" | "analytics" | "comments";
 
 function resourceLabel(id: string): string {
   return SHARE_RESOURCES.find((resource) => resource.id === id)?.label ?? id;
@@ -37,7 +39,7 @@ export function SharedProgressView({
   payload,
   hideHeader = false,
 }: SharedProgressViewProps) {
-  const { ownerName, resources, data } = payload;
+  const { ownerName, resources, data, shareId } = payload;
   const [selectedDate, setSelectedDate] = useState(todayKey());
 
   const calendarMetrics = useMemo(
@@ -50,12 +52,19 @@ export function SharedProgressView({
     if (data.tasks) tabs.push("tasks");
     if (data.habits) tabs.push("habits");
     if (data.analytics) tabs.push("analytics");
+    if (shareId) tabs.push("comments");
     return tabs;
-  }, [data.tasks, data.habits, data.analytics]);
+  }, [data.tasks, data.habits, data.analytics, shareId]);
 
   const [activeTab, setActiveTab] = useState<DetailTab>(
-    availableTabs[0] ?? "tasks"
+    availableTabs[0] ?? "comments"
   );
+
+  useEffect(() => {
+    if (!availableTabs.includes(activeTab) && availableTabs.length > 0) {
+      setActiveTab(availableTabs[0]);
+    }
+  }, [activeTab, availableTabs]);
 
   const isToday = selectedDate === todayKey();
   const dateLabel = formatDateLabel(selectedDate);
@@ -136,11 +145,14 @@ export function SharedProgressView({
                     {tab === "tasks" && <ListTodo className="size-3.5" />}
                     {tab === "habits" && <Repeat className="size-3.5" />}
                     {tab === "analytics" && <BarChart3 className="size-3.5" />}
+                    {tab === "comments" && <MessageCircle className="size-3.5" />}
                     {tab === "tasks"
                       ? "Daily tasks"
                       : tab === "habits"
                         ? "Habits"
-                        : "Insights"}
+                        : tab === "analytics"
+                          ? "Insights"
+                          : "Comments"}
                   </button>
                 ))}
               </div>
@@ -162,6 +174,10 @@ export function SharedProgressView({
 
                 {activeTab === "analytics" && data.analytics && (
                   <AnalyticsSection analytics={data.analytics} />
+                )}
+
+                {activeTab === "comments" && shareId && (
+                  <ShareCommentsPanel shareId={shareId} partnerName={ownerName} />
                 )}
               </div>
             </section>

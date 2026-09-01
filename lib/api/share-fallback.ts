@@ -9,7 +9,19 @@ import {
 } from "@/lib/data/share-store";
 import { requireUserId } from "@/lib/api/server-auth";
 import { apiError, apiSuccess } from "@/lib/api/response";
-import type { ShareCreatePayload, ShareResourceName, ShareUpdatePayload, ReciprocalSharePayload, Task } from "@/lib/data/types";
+import {
+  addCommentToThread,
+  listCommentsForThread,
+  makeCommentThreadKey,
+} from "@/lib/data/share-comment-store";
+import type {
+  ReciprocalSharePayload,
+  ShareCommentCreatePayload,
+  ShareCreatePayload,
+  ShareResourceName,
+  ShareUpdatePayload,
+  Task,
+} from "@/lib/data/types";
 import { normalizeTask } from "@/lib/data/task-completions";
 
 interface Viewer {
@@ -336,4 +348,84 @@ export async function proxyShareRoute(
   }
 
   return proxyToBackend(path, request, init);
+}
+
+function resolveCommentThreadKey(
+  viewer: Viewer,
+  shareId: string
+): string | null {
+  const incoming = shareStore.listIncomingShares(viewer.email).find(
+    (share) => share.id === shareId
+  );
+  if (incoming) {
+    return makeCommentThreadKey(viewer.id, incoming.ownerId);
+  }
+
+  const outgoing = shareStore.listShares(viewer.id).find(
+    (share) => share.id === shareId
+  );
+  if (outgoing) {
+    const partner = getDataProvider().findUserByEmail(outgoing.recipientEmail);
+    if (partner) {
+      return makeCommentThreadKey(viewer.id, partner.id);
+    }
+  }
+
+  return null;
+}
+
+export async function listShareCommentsFallback(
+  request: Request,
+  shareId: string
+) {
+  const viewer = await getViewerFromRequest(request);
+  if (viewer instanceof Response) return viewer;
+
+  const threadKey = resolveCommentThreadKey(viewer, shareId);
+  if (!threadKey) {
+    return apiError("Share not found.", 404, "SHARE_NOT_FOUND");
+  }
+
+  return apiSuccess(listCommentsForThread(threadKey));
+}
+
+export async function postShareCommentFallback(
+  request: Request,
+  shareId: string,
+  bodyText?: string
+) {
+  const viewer = await getViewerFromRequest(request);
+  if (viewer instanceof Response) return viewer;
+
+  const threadKey = resolveCommentThreadKey(viewer, shareId);
+  if (!threadKey) {
+    return apiError("Share not found.", 404, "SHARE_NOT_FOUND");
+  }
+
+  try {
+    const raw = bodyText ?? (await request.text());
+    const body = JSON.parse(raw) as ShareCommentCreatePayload;
+    const text = body.body?.trim();
+    if (!text) {
+      return apiError("Comment cannot be empty.", 400, "VALIDATION_ERROR");
+    }
+
+    const now = new Date().toISOString();
+    const comment = addCommentToThread(threadKey, {
+      id: `comment_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      threadKey,
+      authorId: viewer.id,
+      authorName: viewer.name,
+      body: text,
+      parentId: body.parentId ?? null,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return apiSuccess(comment, "Comment posted", 201);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return apiError("Invalid request body.", 400, "BAD_REQUEST");
+    }
+    return mapShareError(error);
+  }
 }

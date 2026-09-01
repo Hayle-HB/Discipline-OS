@@ -307,3 +307,19 @@ export interface SharedProgressPayload {
     analytics?: AnalyticsData;
   };
 }
+
+export interface ShareComment {
+  id: string;
+  threadKey: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShareCommentCreatePayload {
+  body: string;
+  parentId?: string | null;
+}

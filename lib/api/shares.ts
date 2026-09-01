@@ -4,6 +4,8 @@ import { getStoredToken } from "@/lib/api/auth";
 import type {
   IncomingShareSummary,
   ReciprocalSharePayload,
+  ShareComment,
+  ShareCommentCreatePayload,
   ShareCreatePayload,
   ShareCreateResult,
   SharePreview,
@@ -68,6 +70,24 @@ export async function updateShare(
 ): Promise<ShareRecord> {
   return apiClient<ShareRecord>(shareRoutes.byId(id), {
     method: "PATCH",
+    headers: authHeaders(),
+    body: payload,
+  });
+}
+
+export async function listShareComments(shareId: string): Promise<ShareComment[]> {
+  return apiClient<ShareComment[]>(shareRoutes.comments(shareId), {
+    method: "GET",
+    headers: authHeaders(),
+  });
+}
+
+export async function createShareComment(
+  shareId: string,
+  payload: ShareCommentCreatePayload
+): Promise<ShareComment> {
+  return apiClient<ShareComment>(shareRoutes.comments(shareId), {
+    method: "POST",
     headers: authHeaders(),
     body: payload,
   });
