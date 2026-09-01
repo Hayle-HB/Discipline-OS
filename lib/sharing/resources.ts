@@ -29,6 +29,11 @@ export const SHARE_RESOURCES = [
     label: "Analytics",
     description: "Charts, trends, and insights.",
   },
+  {
+    id: "goals",
+    label: "Goals",
+    description: "Life goals, linked tasks, and progress.",
+  },
 ] as const;
 
 export type ShareResourceId = (typeof SHARE_RESOURCES)[number]["id"];

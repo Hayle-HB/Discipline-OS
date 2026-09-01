@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Flame,
   LayoutDashboard,
   Loader2,
   LogOut,
+  MoreHorizontal,
   Settings2,
+  Target,
   Users,
 } from "lucide-react";
 
@@ -26,12 +28,21 @@ interface NavItem {
   disabled?: boolean;
 }
 
-const navItems: NavItem[] = [
+const primaryNavItems: NavItem[] = [
   { label: "Today", href: "/dashboard", icon: LayoutDashboard },
   { label: "Manage", href: "/dashboard/manage", icon: Settings2 },
   { label: "Habits", href: "/dashboard/habits", icon: Flame },
+  { label: "Goals", href: "/dashboard/goals", icon: Target },
+];
+
+const desktopExtraNavItems: NavItem[] = [
   { label: "Friends", href: "/dashboard/friends", icon: Users },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+];
+
+const mobileMoreItems: NavItem[] = [
+  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { label: "Friends", href: "/dashboard/friends", icon: Users },
 ];
 
 interface DashboardShellProps {
@@ -43,7 +54,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const isProfileActive = pathname.startsWith("/dashboard/profile");
+  const isMoreActive = mobileMoreItems.some((item) => isActivePath(pathname, item.href));
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -51,9 +68,9 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
     router.replace("/login");
   }
 
-  function isActive(href: string) {
-    if (href === "/dashboard") return pathname === "/dashboard";
-    return pathname.startsWith(href);
+  function isActivePath(currentPath: string, href: string) {
+    if (href === "/dashboard") return currentPath === "/dashboard";
+    return currentPath.startsWith(href);
   }
 
   return (
@@ -64,15 +81,15 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </div>
 
         <nav className="shrink-0 space-y-1 px-3 py-4" aria-label="Dashboard">
-          {navItems.map((item) => (
+          {[...primaryNavItems, ...desktopExtraNavItems].map((item) => (
             <Link
               key={item.label}
               href={item.href}
               aria-disabled={item.disabled}
-              aria-current={isActive(item.href) ? "page" : undefined}
+              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive(item.href)
+                isActivePath(pathname, item.href)
                   ? "bg-secondary text-foreground"
                   : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                 item.disabled && "pointer-events-none opacity-40"
@@ -99,12 +116,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">
-                {user.name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </p>
+              <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
             </div>
           </Link>
           <Button
@@ -156,17 +169,17 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </main>
 
         <nav
-          className="safe-bottom flex shrink-0 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden"
+          className="safe-bottom relative flex shrink-0 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden"
           aria-label="Mobile dashboard"
         >
-          {navItems.map((item) => (
+          {primaryNavItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              aria-current={isActive(item.href) ? "page" : undefined}
+              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
               className={cn(
                 "flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[11px] font-medium transition-colors active:bg-secondary/50",
-                isActive(item.href)
+                isActivePath(pathname, item.href)
                   ? "text-foreground"
                   : "text-muted-foreground"
               )}
@@ -175,6 +188,48 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <span className="truncate">{item.label}</span>
             </Link>
           ))}
+
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-haspopup="menu"
+            onClick={() => setMoreOpen((current) => !current)}
+            className={cn(
+              "flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[11px] font-medium transition-colors active:bg-secondary/50",
+              isMoreActive || moreOpen ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
+            <MoreHorizontal className="size-5 shrink-0" aria-hidden="true" />
+            <span className="truncate">More</span>
+          </button>
+
+          {moreOpen && (
+            <>
+              <button
+                type="button"
+                aria-label="Close menu"
+                className="fixed inset-0 z-40 bg-background/50"
+                onClick={() => setMoreOpen(false)}
+              />
+              <div className="absolute bottom-[calc(100%+0.5rem)] right-3 z-50 w-52 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xl">
+                {mobileMoreItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-secondary/50",
+                      isActivePath(pathname, item.href)
+                        ? "bg-secondary text-foreground"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    <item.icon className="size-4 shrink-0" aria-hidden="true" />
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </nav>
       </div>
     </div>

@@ -46,6 +46,13 @@ export const API_CONFIG = {
       preview: (token: string) => `/api/shares/access/${token}`,
       data: (token: string) => `/api/shares/access/${token}/data`,
     },
+    goals: {
+      list: "/api/goals",
+      byId: (id: string) => `/api/goals/${id}`,
+      tasks: (goalId: string) => `/api/goals/${goalId}/tasks`,
+      taskById: (goalId: string, taskId: string) =>
+        `/api/goals/${goalId}/tasks/${taskId}`,
+    },
   },
 } as const;
 

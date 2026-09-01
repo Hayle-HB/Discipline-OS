@@ -22,11 +22,17 @@ async function parseResponse<T>(response: Response): Promise<T> {
     return undefined as T;
   }
 
-  const json = (await response.json()) as ApiResponse<T>;
+  const json = (await response.json()) as ApiResponse<T> & { detail?: unknown };
 
   if (!response.ok || json.success === false) {
+    const detail =
+      typeof json.detail === "string"
+        ? json.detail
+        : Array.isArray(json.detail)
+          ? json.detail.map((item) => item?.msg ?? String(item)).join(", ")
+          : undefined;
     const message =
-      json.success === false ? json.error : "Request failed";
+      json.success === false ? json.error : detail ?? "Request failed";
     const code = json.success === false ? json.code : undefined;
     throw new ApiError(message, response.status, code);
   }

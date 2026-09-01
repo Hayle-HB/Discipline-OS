@@ -182,7 +182,105 @@ export type ShareResourceName =
   | "habits"
   | "streak"
   | "discipline_score"
-  | "analytics";
+  | "analytics"
+  | "goals";
+
+export type GoalCategory =
+  | "career"
+  | "health"
+  | "finance"
+  | "education"
+  | "personal"
+  | "other";
+
+export type GoalPriority = "low" | "medium" | "high";
+
+export interface GoalTask {
+  id: string;
+  goalId: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalSummary {
+  id: string;
+  title: string;
+  description?: string;
+  why?: string;
+  deadline?: string;
+  category: GoalCategory;
+  priority: GoalPriority;
+  status: "active" | "archived";
+  progressPercent: number;
+  tasksTotal: number;
+  tasksCompleted: number;
+  daysRemaining?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalDetail extends GoalSummary {
+  tasks: GoalTask[];
+}
+
+export interface CreateGoalPayload {
+  title: string;
+  description?: string;
+  why?: string;
+  deadline?: string;
+  category?: GoalCategory;
+  priority?: GoalPriority;
+}
+
+export interface UpdateGoalPayload {
+  title?: string;
+  description?: string;
+  why?: string;
+  deadline?: string;
+  category?: GoalCategory;
+  priority?: GoalPriority;
+}
+
+export interface CreateGoalTaskPayload {
+  title: string;
+  description?: string;
+}
+
+export interface UpdateGoalTaskPayload {
+  title?: string;
+  description?: string;
+  completed?: boolean;
+}
+
+export interface SharedGoalTask {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+}
+
+export interface SharedGoal {
+  id: string;
+  title: string;
+  description?: string;
+  why?: string;
+  deadline?: string;
+  category: GoalCategory;
+  priority: GoalPriority;
+  progressPercent: number;
+  tasksTotal: number;
+  tasksCompleted: number;
+  daysRemaining?: number | null;
+  tasks: SharedGoalTask[];
+}
+
+export interface SharedGoalsData {
+  goals: SharedGoal[];
+}
 
 export interface ShareResourcePermission {
   name: ShareResourceName;
@@ -305,6 +403,7 @@ export interface SharedProgressPayload {
     tasks?: SharedTasksData;
     habits?: SharedHabitsData;
     analytics?: AnalyticsData;
+    goals?: SharedGoalsData;
   };
 }
 

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 
+import { buildSharedGoalsData } from "@/lib/data/goal-store";
 import { getDataProvider } from "@/lib/data";
 import { addDays, toDateKey } from "@/lib/data/dates";
 import {
@@ -23,6 +24,7 @@ const VALID_RESOURCES = new Set<ShareResourceName>([
   "streak",
   "discipline_score",
   "analytics",
+  "goals",
 ]);
 
 export class ShareAccessError extends Error {
@@ -241,6 +243,9 @@ export function buildSharedDataFromTasks(
   }
   if (allowed.has("analytics")) {
     data.analytics = getDataProvider().getAnalytics(ownerId);
+  }
+  if (allowed.has("goals")) {
+    data.goals = buildSharedGoalsData(ownerId);
   }
 
   return data;

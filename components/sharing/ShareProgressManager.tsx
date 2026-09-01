@@ -129,8 +129,8 @@ export function ShareProgressManager() {
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Invite someone by email. Re-sharing with the same person updates their
-            access instead of creating duplicates.
+            Send an invitation to share your progress by entering your recipient's email address.
+       
           </p>
 
           <form onSubmit={handleCreateShare} className="space-y-5">

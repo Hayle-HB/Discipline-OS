@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { CalendarPanel } from "@/components/dashboard/calendar";
+import { SharedGoalsSection } from "@/components/goals/SharedGoalsSection";
 import { ShareCommentsPanel } from "@/components/sharing/ShareCommentsPanel";
 import { Button } from "@/components/ui/button";
 import { formatDateLabel, todayKey } from "@/lib/data/dates";
@@ -29,7 +30,7 @@ interface SharedProgressViewProps {
   hideHeader?: boolean;
 }
 
-type DetailTab = "tasks" | "habits" | "analytics" | "comments";
+type DetailTab = "tasks" | "habits" | "analytics" | "goals" | "comments";
 
 function resourceLabel(id: string): string {
   return SHARE_RESOURCES.find((resource) => resource.id === id)?.label ?? id;
@@ -52,9 +53,10 @@ export function SharedProgressView({
     if (data.tasks) tabs.push("tasks");
     if (data.habits) tabs.push("habits");
     if (data.analytics) tabs.push("analytics");
+    if (data.goals) tabs.push("goals");
     if (shareId) tabs.push("comments");
     return tabs;
-  }, [data.tasks, data.habits, data.analytics, shareId]);
+  }, [data.tasks, data.habits, data.analytics, data.goals, shareId]);
 
   const [activeTab, setActiveTab] = useState<DetailTab>(
     availableTabs[0] ?? "comments"
@@ -151,6 +153,7 @@ export function SharedProgressView({
                     {tab === "tasks" && <ListTodo className="size-3.5" />}
                     {tab === "habits" && <Repeat className="size-3.5" />}
                     {tab === "analytics" && <BarChart3 className="size-3.5" />}
+                    {tab === "goals" && <Target className="size-3.5" />}
                     {tab === "comments" && <MessageCircle className="size-3.5" />}
                     {tab === "tasks"
                       ? "Daily tasks"
@@ -158,7 +161,9 @@ export function SharedProgressView({
                         ? "Habits"
                         : tab === "analytics"
                           ? "Insights"
-                          : "Comments"}
+                          : tab === "goals"
+                            ? "Goals"
+                            : "Comments"}
                   </button>
                 ))}
               </div>
@@ -185,6 +190,10 @@ export function SharedProgressView({
 
                 {activeTab === "analytics" && data.analytics && (
                   <AnalyticsSection analytics={data.analytics} />
+                )}
+
+                {activeTab === "goals" && data.goals && (
+                  <SharedGoalsSection goals={data.goals.goals} />
                 )}
 
                 {activeTab === "comments" && shareId && (

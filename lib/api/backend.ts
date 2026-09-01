@@ -149,6 +149,62 @@ export async function proxyToBackend(
   }
 }
 
+/** Proxy when backend succeeds; return null so routes can use mock fallback. */
+export async function tryProxyBackendRoute(
+  path: string,
+  request: Request,
+  init?: RequestInit
+): Promise<Response | null> {
+  if (!isBackendEnabled()) {
+    return null;
+  }
+
+  const method = init?.method ?? request.method;
+  let body = init?.body;
+  if (body === undefined && method !== "GET" && method !== "HEAD") {
+    body = await request.text();
+  }
+
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type") && body) {
+    headers.set("Content-Type", "application/json");
+  }
+  const authorization = request.headers.get("authorization");
+  if (authorization) {
+    headers.set("Authorization", authorization);
+  }
+
+  try {
+    const response = await fetchWithRetry(`${getBackendBaseUrl()}${path}`, {
+      method,
+      headers,
+      body: body || undefined,
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text) as { success?: boolean };
+      if (json.success === false) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+
+    return new Response(text, {
+      status: response.status,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Proxy route to FastAPI when backend is configured; otherwise return null for mock fallback. */
 export async function proxyBackendRoute(
   path: string,
