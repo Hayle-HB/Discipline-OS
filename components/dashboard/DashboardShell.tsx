@@ -41,6 +41,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isProfileActive = pathname.startsWith("/dashboard/profile");
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -60,10 +61,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           <Logo />
         </div>
 
-        <nav
-          className="shrink-0 space-y-1 px-3 py-4"
-          aria-label="Dashboard"
-        >
+        <nav className="shrink-0 space-y-1 px-3 py-4" aria-label="Dashboard">
           {navItems.map((item) => (
             <Link
               key={item.label}
@@ -85,8 +83,17 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </nav>
 
         <div className="mt-auto shrink-0 border-t border-border p-4">
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-secondary/30 px-3 py-2.5">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+          <Link
+            href="/dashboard/profile"
+            aria-current={isProfileActive ? "page" : undefined}
+            className={cn(
+              "mb-3 flex items-center gap-2 rounded-lg border px-3 py-2.5 transition-colors",
+              isProfileActive
+                ? "border-foreground/20 bg-secondary"
+                : "border-border bg-secondary/30 hover:bg-secondary/50"
+            )}
+          >
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-foreground">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -97,7 +104,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                 {user.email}
               </p>
             </div>
-          </div>
+          </Link>
           <Button
             variant="outline"
             size="sm"
@@ -116,15 +123,19 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
       </aside>
 
       <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4 lg:hidden">
+        <header className="safe-top flex shrink-0 items-center justify-between border-b border-border px-4 py-3 lg:hidden">
           <Logo showText={false} />
-          <div className="flex items-center gap-2">
-            <span className="max-w-[120px] truncate text-sm text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-2">
+            <Link
+              href="/dashboard/profile"
+              className="max-w-[9rem] truncate text-sm font-medium text-foreground sm:max-w-[12rem]"
+            >
               {user.name}
-            </span>
+            </Link>
             <Button
               variant="outline"
               size="icon"
+              className="size-11 shrink-0"
               onClick={handleLogout}
               disabled={isLoggingOut}
               aria-label="Log out"
@@ -138,10 +149,12 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
+          {children}
+        </main>
 
         <nav
-          className="flex shrink-0 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden"
+          className="safe-bottom flex shrink-0 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden"
           aria-label="Mobile dashboard"
         >
           {navItems.map((item) => (
@@ -150,7 +163,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-2.5 text-[10px] font-medium transition-colors",
+                "flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[11px] font-medium transition-colors active:bg-secondary/50",
                 isActive(item.href)
                   ? "text-foreground"
                   : "text-muted-foreground"

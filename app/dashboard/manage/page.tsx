@@ -67,7 +67,7 @@ export default function ManagePage() {
   if (!data) return null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="dashboard-page dashboard-page-narrow">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Manage

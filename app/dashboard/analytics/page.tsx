@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
   if (!data) return null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="dashboard-page">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Personal Analytics
@@ -43,15 +43,15 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-5 space-y-5 sm:mt-8 sm:space-y-6">
           <AnalyticsSummaryCards summary={data.summary} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
             <AnalyticsWeeklyChart activity={data.weeklyActivity} />
             <MonthlyTrend scores={data.monthlyScores} />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
             <CategoryBreakdown categories={data.categoryBreakdown} />
             <InsightsPanel insights={data.insights} />
           </div>

@@ -1,0 +1,2 @@
+/** Inline script to apply theme before React hydrates (prevents flash). */
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var k="discipline-os-preferences";var r=localStorage.getItem(k);var t="night";if(r){var p=JSON.parse(r);if(p&&p.values&&p.values.theme)t=p.values.theme}var d=document.documentElement;var s=t==="system"?window.matchMedia("(prefers-color-scheme: dark)").matches?"night":"day":t;d.dataset.theme=t;d.dataset.resolvedTheme=s;d.style.colorScheme=s==="day"?"light":"dark"}catch(e){}})();`;

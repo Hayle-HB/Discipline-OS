@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
+/* Shared tokens (non-theme) */
 :root {
+  --radius: 0.625rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Night — default dark */
+:root,
+[data-resolved-theme="night"] {
   --background: #09090b;
   --foreground: #fafafa;
   --card: #0c0c0e;
@@ -20,7 +29,97 @@
   --border: #27272a;
   --input: #27272a;
   --ring: #d4d4d8;
-  --radius: 0.625rem;
+  --calendar-empty-bg: color-mix(in oklch, var(--secondary) 60%, transparent);
+  --calendar-empty-fg: var(--muted-foreground);
+  --calendar-success-bg: color-mix(in oklch, #22c55e 20%, transparent);
+  --calendar-success-fg: #86efac;
+  --calendar-warning-bg: color-mix(in oklch, #f59e0b 15%, transparent);
+  --calendar-warning-fg: #fcd34d;
+  --calendar-danger-bg: color-mix(in oklch, #ef4444 15%, transparent);
+  --calendar-danger-fg: #fca5a5;
+  --calendar-neutral-bg: color-mix(in oklch, var(--secondary) 80%, transparent);
+  --calendar-neutral-fg: var(--muted-foreground);
+  --discipline-0: #27272a;
+  --discipline-1: #14532d;
+  --discipline-2: #15803d;
+  --discipline-3: #22c55e;
+  --discipline-4: #4ade80;
+}
+
+/* Day — light */
+[data-resolved-theme="day"] {
+  --background: #fafafa;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #09090b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #3f3f46;
+  --accent: #f4f4f5;
+  --accent-foreground: #09090b;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
+  --ring: #71717a;
+  --calendar-empty-bg: #e4e4e7;
+  --calendar-empty-fg: #18181b;
+  --calendar-success-bg: #bbf7d0;
+  --calendar-success-fg: #14532d;
+  --calendar-warning-bg: #fde68a;
+  --calendar-warning-fg: #92400e;
+  --calendar-danger-bg: #fecaca;
+  --calendar-danger-fg: #991b1b;
+  --calendar-neutral-bg: #f4f4f5;
+  --calendar-neutral-fg: #27272a;
+  --discipline-0: #e4e4e7;
+  --discipline-1: #bbf7d0;
+  --discipline-2: #86efac;
+  --discipline-3: #22c55e;
+  --discipline-4: #15803d;
+}
+
+/* Dusk — soft blue dark */
+[data-resolved-theme="dusk"] {
+  --background: #0c1117;
+  --foreground: #e8eef4;
+  --card: #121820;
+  --card-foreground: #e8eef4;
+  --popover: #121820;
+  --popover-foreground: #e8eef4;
+  --primary: #e8eef4;
+  --primary-foreground: #0c1117;
+  --secondary: #1a2330;
+  --secondary-foreground: #e8eef4;
+  --muted: #1a2330;
+  --muted-foreground: #8b9cb3;
+  --accent: #1e2a3a;
+  --accent-foreground: #e8eef4;
+  --destructive: #f87171;
+  --destructive-foreground: #0c1117;
+  --border: #243044;
+  --input: #243044;
+  --ring: #94a3b8;
+  --calendar-empty-bg: color-mix(in oklch, var(--secondary) 70%, transparent);
+  --calendar-empty-fg: var(--muted-foreground);
+  --calendar-success-bg: color-mix(in oklch, #22c55e 18%, transparent);
+  --calendar-success-fg: #86efac;
+  --calendar-warning-bg: color-mix(in oklch, #f59e0b 14%, transparent);
+  --calendar-warning-fg: #fcd34d;
+  --calendar-danger-bg: color-mix(in oklch, #ef4444 14%, transparent);
+  --calendar-danger-fg: #fca5a5;
+  --calendar-neutral-bg: color-mix(in oklch, var(--secondary) 85%, transparent);
+  --calendar-neutral-fg: var(--muted-foreground);
+  --discipline-0: #243044;
+  --discipline-1: #134e3a;
+  --discipline-2: #047857;
+  --discipline-3: #10b981;
+  --discipline-4: #34d399;
 }
 
 @theme inline {
@@ -59,6 +158,120 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile layout helpers */
+.safe-top {
+  padding-top: max(0.75rem, var(--safe-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, var(--safe-bottom));
+}
+
+.dashboard-page {
+  margin-inline: auto;
+  max-width: 72rem;
+  padding: 1.25rem 1rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-page {
+    padding: 1.5rem 1rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-page {
+    padding: 2.5rem 2rem;
+  }
+}
+
+.dashboard-page-narrow {
+  max-width: 56rem;
+}
+
+/* Horizontal scroll tab strip — mobile-first period pickers */
+.scroll-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline: -0.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scroll-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-tabs > * {
+  flex-shrink: 0;
+}
+
+/* Discipline heatmap calendar */
+.discipline-dot {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--discipline-0);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.discipline-dot-legend {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.discipline-dot-empty {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+}
+
+.discipline-level-0:not(.discipline-dot-empty) {
+  background: var(--discipline-0);
+}
+
+.discipline-level-1 {
+  background: var(--discipline-1);
+}
+
+.discipline-level-2 {
+  background: var(--discipline-2);
+}
+
+.discipline-level-3 {
+  background: var(--discipline-3);
+}
+
+.discipline-level-4 {
+  background: var(--discipline-4);
+}
+
+.calendar-heatmap-selected {
+  background: color-mix(in oklch, var(--secondary) 50%, transparent);
+  box-shadow:
+    0 0 0 1px var(--background),
+    0 0 0 2px rgb(14 165 233 / 0.9);
+}
+
+.calendar-heatmap-selected .discipline-dot {
+  transform: scale(1.15);
+}
+
+/* Legacy calendar classes — kept for any remaining references */
+.calendar-cell {
+  background: var(--calendar-empty-bg);
+  color: var(--calendar-empty-fg);
+}
+
+.calendar-cell-selected {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px rgb(14 165 233 / 0.85);
 }
 
 /* Subtle fade-up animation */
@@ -90,9 +303,21 @@ body {
   }
 }
 
-/* Smooth scrolling */
+/* Theme transition when preference changes */
 html {
   scroll-behavior: smooth;
+}
+
+html[data-theme-ready="true"] {
+  color-scheme: light dark;
+}
+
+html[data-theme-ready="true"] body,
+html[data-theme-ready="true"] .theme-transition {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

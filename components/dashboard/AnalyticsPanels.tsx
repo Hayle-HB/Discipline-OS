@@ -48,23 +48,25 @@ export function MonthlyTrend({ scores }: MonthlyTrendProps) {
         <CardTitle className="text-base font-medium">Monthly Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-end justify-between gap-3">
-          {scores.map((entry) => (
-            <div key={entry.month} className="flex flex-1 flex-col items-center gap-2">
-              <span className="text-xs font-medium text-foreground">
-                {entry.score}%
-              </span>
-              <div className="flex h-28 w-full items-end justify-center">
-                <div
-                  className="w-full max-w-[2.5rem] rounded-md bg-foreground/80 transition-all"
-                  style={{ height: `${(entry.score / max) * 100}%` }}
-                />
+        <div className="-mx-1 overflow-x-auto pb-1">
+          <div className="flex min-w-max items-end justify-between gap-2 px-1 sm:min-w-0 sm:gap-3">
+            {scores.map((entry) => (
+              <div key={entry.month} className="flex w-14 flex-col items-center gap-2 sm:flex-1">
+                <span className="text-xs font-medium text-foreground">
+                  {entry.score}%
+                </span>
+                <div className="flex h-24 w-full items-end justify-center sm:h-28">
+                  <div
+                    className="w-full max-w-[2.5rem] rounded-md bg-foreground/80 transition-all"
+                    style={{ height: `${(entry.score / max) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  {entry.month}
+                </span>
               </div>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                {entry.month}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -86,9 +88,9 @@ export function CategoryBreakdown({ categories }: CategoryBreakdownProps) {
           const pct = Math.round((cat.completed / cat.total) * 100);
           return (
             <div key={cat.category}>
-              <div className="mb-1.5 flex justify-between text-sm">
-                <span className="text-foreground">{cat.category}</span>
-                <span className="text-muted-foreground">
+              <div className="mb-1.5 flex justify-between gap-2 text-sm">
+                <span className="min-w-0 truncate text-foreground">{cat.category}</span>
+                <span className="shrink-0 text-muted-foreground">
                   {cat.completed}/{cat.total} ({pct}%)
                 </span>
               </div>

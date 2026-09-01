@@ -73,7 +73,7 @@ export default function DashboardPage() {
   if (!data) return null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="dashboard-page">
       <DashboardHeader name={user.name} />
 
       {error && (
@@ -82,11 +82,11 @@ export default function DashboardPage() {
         </p>
       )}
 
-      <div className="mt-8 space-y-6">
+      <div className="mt-5 space-y-5 sm:mt-8 sm:space-y-6">
         <StatsGrid stats={data.stats} />
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          <div className="space-y-6 lg:col-span-3">
+        <div className="grid gap-5 sm:gap-6 lg:grid-cols-5">
+          <div className="order-2 space-y-5 sm:space-y-6 lg:order-none lg:col-span-3">
             <TaskCheckView
               tasksByPeriod={data.tasksByPeriod}
               dateKey={selectedDate}
@@ -102,7 +102,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="space-y-6 lg:col-span-2">
+          <div className="order-1 space-y-5 sm:space-y-6 lg:order-none lg:col-span-2">
             <CalendarPanel
               tasks={data.tasks}
               compact

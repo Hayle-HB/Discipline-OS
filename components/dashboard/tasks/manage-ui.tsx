@@ -79,7 +79,7 @@ export function PeriodPicker({
   compact,
 }: PeriodPickerProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="scroll-tabs sm:flex-wrap">
       {TASK_PERIODS.map((p) => {
         const theme = PERIOD_THEME[p.id];
         const Icon = theme.icon;
@@ -91,7 +91,7 @@ export function PeriodPicker({
             disabled={disabled}
             onClick={() => onChange(p.id)}
             className={cn(
-              "flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all",
+              "flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all",
               compact ? "py-1.5 text-xs" : "text-sm",
               selected
                 ? cn("border-foreground/25 bg-secondary shadow-sm", theme.ring, "ring-1")
@@ -133,7 +133,7 @@ export function PriorityPicker({ value, onChange, disabled }: PriorityPickerProp
           disabled={disabled}
           onClick={() => onChange(p.id)}
           className={cn(
-            "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+            "flex min-h-11 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:py-1.5",
             value === p.id
               ? "border-foreground/30 bg-foreground text-background"
               : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"

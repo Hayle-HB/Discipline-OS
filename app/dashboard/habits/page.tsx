@@ -25,7 +25,9 @@ export default function HabitsPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busy, setBusy] = useState<{ id: string; status: TaskDayStatus } | null>(
+    null
+  );
   const [activePeriod, setActivePeriod] = useState<TaskPeriod>("daily");
 
   const loadData = useCallback(async () => {
@@ -44,7 +46,8 @@ export default function HabitsPage() {
   }, [loadData]);
 
   async function handleAction(id: string, status: TaskDayStatus) {
-    setBusyId(id);
+    if (busy) return;
+    setBusy({ id, status });
     try {
       const updated = await recordTaskCompletion(id, status);
       setData((prev) => {
@@ -54,7 +57,7 @@ export default function HabitsPage() {
     } catch {
       setError("Could not update habit. Please try again.");
     } finally {
-      setBusyId(null);
+      setBusy(null);
     }
   }
 
@@ -67,7 +70,7 @@ export default function HabitsPage() {
   const PeriodIcon = theme.icon;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8 lg:py-10">
+    <div className="dashboard-page">
         <div className="animate-fade-up">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Habits
@@ -83,7 +86,7 @@ export default function HabitsPage() {
           </p>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2" role="tablist">
+        <div className="scroll-tabs mt-5 sm:mt-6" role="tablist">
           {TASK_PERIODS.map((p) => {
             const ps = periodStats(data.tasksByPeriod[p.id]);
             return (
@@ -94,7 +97,7 @@ export default function HabitsPage() {
                 aria-selected={activePeriod === p.id}
                 onClick={() => setActivePeriod(p.id)}
                 className={cn(
-                  "rounded-xl border px-4 py-2.5 text-left transition-all",
+                  "min-h-11 rounded-xl border px-4 py-2.5 text-left transition-all",
                   activePeriod === p.id
                     ? "border-foreground/20 bg-secondary text-foreground"
                     : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
@@ -175,7 +178,9 @@ export default function HabitsPage() {
                     <TaskActionRow
                       task={task}
                       onAction={handleAction}
-                      disabled={busyId === task.id}
+                      loadingStatus={
+                        busy?.id === task.id ? busy.status : null
+                      }
                     />
                   </li>
                 ))}

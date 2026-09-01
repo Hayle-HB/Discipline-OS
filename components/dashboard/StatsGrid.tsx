@@ -2,6 +2,7 @@ import { CheckCircle2, Flame, Target } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardStats } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 
 interface StatsGridProps {
   stats: DashboardStats;
@@ -30,14 +31,17 @@ const statConfig = [
 
 export function StatsGrid({ stats }: StatsGridProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
       {statConfig.map((stat, index) => (
         <Card
           key={stat.key}
-          className="border-border/60 bg-card/50 backdrop-blur-sm animate-fade-up"
+          className={cn(
+            "border-border/60 bg-card/50 backdrop-blur-sm animate-fade-up",
+            index === 2 && "col-span-2 sm:col-span-1"
+          )}
           style={{ animationDelay: `${index * 80}ms` }}
         >
-          <CardContent className="flex items-center gap-4 p-5">
+          <CardContent className="flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary">
               <stat.icon className="size-5 text-foreground" aria-hidden="true" />
             </div>

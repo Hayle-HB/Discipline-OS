@@ -1,5 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { PreferencesProvider } from "@/providers/PreferencesProvider";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme/bootstrap-script";
 
 import "./globals.css";
 
@@ -29,6 +32,12 @@ export const metadata: Metadata = {
   ],
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,9 +47,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-resolved-theme="night"
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
-        {children}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
+      <body className="theme-transition min-h-dvh flex flex-col bg-background font-sans text-foreground">
+        <PreferencesProvider>{children}</PreferencesProvider>
       </body>
     </html>
   );

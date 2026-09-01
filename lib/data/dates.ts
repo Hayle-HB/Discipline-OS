@@ -144,3 +144,37 @@ export const MONTH_LABELS = [
   "November",
   "December",
 ];
+
+export type CalendarViewMode = "day" | "week" | "month";
+
+/** Start of calendar week (Sunday). */
+export function startOfWeek(date: Date): Date {
+  return addDays(date, -date.getDay());
+}
+
+/** Seven days Sun–Sat containing `anchor`. */
+export function buildWeekDays(anchor: Date): CalendarCell[] {
+  const start = startOfWeek(anchor);
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(start, i);
+    return {
+      date,
+      dateKey: toDateKey(date),
+      inCurrentMonth: date.getMonth() === anchor.getMonth(),
+    };
+  });
+}
+
+export function formatWeekRange(anchor: Date): string {
+  const start = startOfWeek(anchor);
+  const end = addDays(start, 6);
+  const short: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${start.toLocaleDateString("en-US", { ...short, year: "numeric" })} – ${end.toLocaleDateString("en-US", { ...short, year: "numeric" })}`;
+  }
+  if (start.getMonth() !== end.getMonth()) {
+    return `${start.toLocaleDateString("en-US", short)} – ${end.toLocaleDateString("en-US", { ...short, year: "numeric" })}`;
+  }
+  return `${MONTH_LABELS[start.getMonth()]} ${start.getDate()} – ${end.getDate()}, ${end.getFullYear()}`;
+}

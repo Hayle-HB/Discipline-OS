@@ -66,19 +66,19 @@ export function RoutinesPanel({
                       type="button"
                       onClick={() => onToggleStep(routine.id, step.id)}
                       disabled={busyStepId === step.id}
-                      className="flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-secondary/50"
+                      className="flex min-h-11 w-full items-center gap-3 rounded-md px-2 py-2.5 text-left transition-colors active:bg-secondary/50 sm:py-1.5 sm:hover:bg-secondary/50"
                       aria-pressed={step.completed}
                     >
                       <span
                         className={cn(
-                          "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                          "flex size-5 shrink-0 items-center justify-center rounded-full border sm:size-4",
                           step.completed
                             ? "border-emerald-500/50 bg-emerald-500/10"
                             : "border-border bg-secondary"
                         )}
                       >
                         {step.completed && (
-                          <CheckCircle2 className="size-3 text-emerald-400" />
+                          <CheckCircle2 className="size-3.5 text-emerald-400 sm:size-3" />
                         )}
                       </span>
                       <span

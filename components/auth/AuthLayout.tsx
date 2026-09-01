@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ThemePicker } from "@/components/preferences/ThemePicker";
 import { Logo } from "@/components/shared/Logo";
 
 interface AuthLayoutProps {
@@ -22,7 +23,7 @@ export function AuthLayout({
   backLabel = "Back to home",
 }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-full flex-col lg:flex-row">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
       <div className="relative hidden flex-1 flex-col justify-between overflow-hidden border-r border-border bg-secondary/20 p-10 lg:flex">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
@@ -45,7 +46,10 @@ export function AuthLayout({
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-12">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-8 safe-top safe-bottom sm:px-6 sm:py-12 lg:px-12">
+        <div className="absolute right-4 top-4 sm:right-6 sm:top-6">
+          <ThemePicker variant="compact" />
+        </div>
         <div className="mb-8 lg:hidden">
           <Logo />
         </div>
