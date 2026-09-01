@@ -40,6 +40,10 @@ The frontend proxies API calls to the FastAPI backend on Render. Set these **Env
 
 Do **not** set `USE_MOCK_AUTH` in production (or set it to `false`).
 
+If you skip `BACKEND_API_URL`, production builds fall back to the Render URL in code — but you should still set it explicitly in Vercel.
+
+**Render free tier:** the backend sleeps when idle. The first request after sleep can take 30–60 seconds. Wait and retry, or upgrade Render to keep it awake.
+
 Leave `NEXT_PUBLIC_API_URL` empty so the browser calls same-origin `/api/*` routes, which proxy to Render server-side.
 
 ### Render backend (already deployed)
