@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -15,7 +16,9 @@ export default function LoginPage() {
       title="Welcome back 👋"
       subtitle="Continue building the life you promised yourself."
     >
-      <LoginForm />
+      <Suspense fallback={<div className="h-40" />}>
+        <LoginForm />
+      </Suspense>
     </AuthLayout>
   );
 }

@@ -35,6 +35,15 @@ export const API_CONFIG = {
     routines: {
       list: "/api/routines",
     },
+    shares: {
+      list: "/api/shares",
+      incoming: "/api/shares/incoming",
+      incomingById: (id: string) => `/api/shares/incoming/${id}`,
+      incomingData: (id: string) => `/api/shares/incoming/${id}/data`,
+      byId: (id: string) => `/api/shares/${id}`,
+      preview: (token: string) => `/api/shares/access/${token}`,
+      data: (token: string) => `/api/shares/access/${token}/data`,
+    },
   },
 } as const;
 

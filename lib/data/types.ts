@@ -175,3 +175,120 @@ export interface HabitsData {
   completedToday: number;
   total: number;
 }
+
+export type ShareResourceName =
+  | "calendar"
+  | "tasks"
+  | "habits"
+  | "streak"
+  | "discipline_score"
+  | "analytics";
+
+export interface ShareResourcePermission {
+  name: ShareResourceName;
+  permission: "view";
+}
+
+export interface ShareRecord {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail?: string | null;
+  recipientEmail: string;
+  resources: ShareResourcePermission[];
+  status: "active" | "revoked" | "pending";
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IncomingShareSummary {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail?: string | null;
+  resources: ShareResourcePermission[];
+  status: "active" | "revoked" | "pending";
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShareCreatePayload {
+  recipientEmail: string;
+  resources: ShareResourcePermission[];
+  expiresInDays?: number | null;
+}
+
+export interface ShareCreateResult {
+  share: ShareRecord;
+  shareToken?: string | null;
+  sharePath?: string | null;
+}
+
+export interface SharePreview {
+  ownerName: string;
+  recipientEmail: string;
+  resources: ShareResourcePermission[];
+  status: string;
+  expiresAt: string | null;
+}
+
+export interface SharedDayMetric {
+  dateKey: string;
+  done: number;
+  missed: number;
+  pending: number;
+  total: number;
+  rate: number;
+}
+
+export interface SharedCalendarData {
+  days: SharedDayMetric[];
+  summary: {
+    daysTracked: number;
+    totalDone: number;
+    totalMissed: number;
+  };
+}
+
+export interface SharedStreakData {
+  currentStreak: number;
+  bestStreak: number;
+  activeTasks: number;
+}
+
+export interface SharedDisciplineScoreData {
+  completed: number;
+  total: number;
+  bestStreak: number;
+  score: number;
+  progress: number;
+}
+
+export interface SharedTasksData {
+  tasks: Array<
+    Pick<Task, "id" | "label" | "period" | "category" | "streak" | "completed"> & {
+      completionLog?: Task["completionLog"];
+    }
+  >;
+}
+
+export interface SharedHabitsData {
+  tasksByPeriod: TasksByPeriod;
+}
+
+export interface SharedProgressPayload {
+  shareId?: string;
+  ownerId?: string;
+  ownerName: string;
+  resources: ShareResourceName[];
+  data: {
+    calendar?: SharedCalendarData;
+    streak?: SharedStreakData;
+    discipline_score?: SharedDisciplineScoreData;
+    tasks?: SharedTasksData;
+    habits?: SharedHabitsData;
+    analytics?: AnalyticsData;
+  };
+}

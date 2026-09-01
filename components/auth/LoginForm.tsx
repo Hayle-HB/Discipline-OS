@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -17,6 +17,8 @@ import { validateLoginInput } from "@/lib/api/validation";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -38,7 +40,7 @@ export function LoginForm() {
     try {
       const { token, user } = await login({ email, password, rememberMe });
       storeAuthSession(token, user, rememberMe);
-      router.push("/dashboard");
+      router.push(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/dashboard");
       router.refresh();
     } catch (err) {
       setError(

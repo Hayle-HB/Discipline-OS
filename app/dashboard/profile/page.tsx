@@ -3,6 +3,7 @@
 import { Mail, Palette, UserRound } from "lucide-react";
 
 import { useDashboardUser } from "@/components/dashboard/DashboardLayoutClient";
+import { ShareProgressManager } from "@/components/sharing/ShareProgressManager";
 import { ThemePicker } from "@/components/preferences/ThemePicker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -46,6 +47,8 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        <ShareProgressManager />
 
         <Card className="border-border/60 bg-card/50">
           <CardHeader className="pb-3">

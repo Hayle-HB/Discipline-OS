@@ -31,10 +31,12 @@ import type { Task } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
 interface CalendarPanelProps {
-  tasks: Task[];
+  tasks?: Task[];
+  metricsByDate?: Map<string, DayMetrics>;
   compact?: boolean;
   selectedDate?: string;
   onSelectedDateChange?: (dateKey: string) => void;
+  className?: string;
 }
 
 const VIEW_MODES: { id: CalendarViewMode; label: string }[] = [
@@ -45,9 +47,11 @@ const VIEW_MODES: { id: CalendarViewMode; label: string }[] = [
 
 export function CalendarPanel({
   tasks,
+  metricsByDate,
   compact = false,
   selectedDate,
   onSelectedDateChange,
+  className,
 }: CalendarPanelProps) {
   const [viewMode, setViewMode] = useState<CalendarViewMode>("week");
   const [internalSelected, setInternalSelected] = useState(todayKey());
@@ -67,9 +71,18 @@ export function CalendarPanel({
   const weekDays = useMemo(() => buildWeekDays(anchorDate), [anchorDate]);
   const monthGrid = useMemo(() => buildMonthGrid(viewDate), [viewDate]);
 
+  const getMetrics = useMemo(() => {
+    return (dateKey: string): DayMetrics => {
+      const preset = metricsByDate?.get(dateKey);
+      if (preset) return preset;
+      if (tasks?.length) return computeDayMetrics(tasks, dateKey);
+      return { dateKey, done: 0, missed: 0, pending: 0, total: 0, rate: 0 };
+    };
+  }, [metricsByDate, tasks]);
+
   const selectedMetrics = useMemo(
-    () => computeDayMetrics(tasks, selectedKey),
-    [tasks, selectedKey]
+    () => getMetrics(selectedKey),
+    [getMetrics, selectedKey]
   );
 
   function selectDate(dateKey: string, date: Date) {
@@ -118,7 +131,7 @@ export function CalendarPanel({
         : `${MONTH_LABELS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
 
   return (
-    <Card className="border-border/60 bg-card/50">
+    <Card className={cn("border-border/60 bg-card/50", className)}>
       <CardHeader className="space-y-2.5 px-4 py-3 sm:px-5">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="truncate text-sm font-semibold tracking-tight">
@@ -199,7 +212,7 @@ export function CalendarPanel({
         {viewMode === "week" && (
           <WeekView
             days={weekDays}
-            tasks={tasks}
+            getMetrics={getMetrics}
             selectedKey={selectedKey}
             onSelect={selectDate}
           />
@@ -208,7 +221,7 @@ export function CalendarPanel({
         {viewMode === "month" && (
           <MonthView
             grid={monthGrid}
-            tasks={tasks}
+            getMetrics={getMetrics}
             selectedKey={selectedKey}
             onSelect={selectDate}
           />
@@ -268,12 +281,12 @@ function DayView({
 
 function WeekView({
   days,
-  tasks,
+  getMetrics,
   selectedKey,
   onSelect,
 }: {
   days: CalendarCell[];
-  tasks: Task[];
+  getMetrics: (dateKey: string) => DayMetrics;
   selectedKey: string;
   onSelect: (dateKey: string, date: Date) => void;
 }) {
@@ -286,7 +299,7 @@ function WeekView({
           </span>
           <HeatmapDayCell
             cell={cell}
-            metrics={computeDayMetrics(tasks, cell.dateKey)}
+            metrics={getMetrics(cell.dateKey)}
             isSelected={cell.dateKey === selectedKey}
             isTodayCell={cell.dateKey === todayKey()}
             showRate={cell.dateKey === selectedKey}
@@ -300,12 +313,12 @@ function WeekView({
 
 function MonthView({
   grid,
-  tasks,
+  getMetrics,
   selectedKey,
   onSelect,
 }: {
   grid: CalendarCell[];
-  tasks: Task[];
+  getMetrics: (dateKey: string) => DayMetrics;
   selectedKey: string;
   onSelect: (dateKey: string, date: Date) => void;
 }) {
@@ -326,7 +339,7 @@ function MonthView({
           <HeatmapDayCell
             key={cell.dateKey}
             cell={cell}
-            metrics={computeDayMetrics(tasks, cell.dateKey)}
+            metrics={getMetrics(cell.dateKey)}
             isSelected={cell.dateKey === selectedKey}
             isTodayCell={cell.dateKey === todayKey()}
             showRate={cell.dateKey === selectedKey}

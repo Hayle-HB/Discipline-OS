@@ -10,6 +10,7 @@ import {
   Loader2,
   LogOut,
   Settings2,
+  Users,
 } from "lucide-react";
 
 import { Logo } from "@/components/shared/Logo";
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { label: "Today", href: "/dashboard", icon: LayoutDashboard },
   { label: "Manage", href: "/dashboard/manage", icon: Settings2 },
   { label: "Habits", href: "/dashboard/habits", icon: Flame },
+  { label: "Friends", href: "/dashboard/friends", icon: Users },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
 ];
 
