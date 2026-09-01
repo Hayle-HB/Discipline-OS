@@ -200,6 +200,8 @@ export interface ShareRecord {
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
+  requestReciprocalAccess?: boolean;
+  reciprocalResponded?: boolean;
 }
 
 export interface IncomingShareSummary {
@@ -212,18 +214,31 @@ export interface IncomingShareSummary {
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
+  reciprocalPending?: boolean;
 }
 
 export interface ShareCreatePayload {
   recipientEmail: string;
   resources: ShareResourcePermission[];
   expiresInDays?: number | null;
+  requestReciprocalAccess?: boolean;
+}
+
+export interface ShareUpdatePayload {
+  resources: ShareResourcePermission[];
+  expiresInDays?: number | null;
+}
+
+export interface ReciprocalSharePayload {
+  resources: ShareResourcePermission[];
+  accept: boolean;
 }
 
 export interface ShareCreateResult {
   share: ShareRecord;
   shareToken?: string | null;
   sharePath?: string | null;
+  updated?: boolean;
 }
 
 export interface SharePreview {

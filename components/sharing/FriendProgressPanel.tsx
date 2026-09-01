@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { SharedProgressView } from "@/components/sharing/SharedProgressView";
+import { ReciprocalSharePrompt } from "@/components/sharing/ReciprocalSharePrompt";
 import { Button } from "@/components/ui/button";
 import { listIncomingShares, getIncomingShareData } from "@/lib/api/shares";
 import { ApiError } from "@/lib/api/types";
@@ -106,12 +107,14 @@ function FriendProgressDetailPanel({
   loading,
   error,
   onBack,
+  onReciprocalComplete,
 }: {
   friend: IncomingShareSummary | null;
   payload: SharedProgressPayload | null;
   loading: boolean;
   error: string | null;
   onBack: () => void;
+  onReciprocalComplete: () => void;
 }) {
   if (!friend) return null;
 
@@ -138,7 +141,16 @@ function FriendProgressDetailPanel({
         )}
 
         {payload && !loading && !error && (
-          <SharedProgressView payload={payload} hideHeader />
+          <div className="space-y-5">
+            {friend.reciprocalPending && (
+              <ReciprocalSharePrompt
+                ownerName={friend.ownerName}
+                shareId={friend.id}
+                onComplete={onReciprocalComplete}
+              />
+            )}
+            <SharedProgressView payload={payload} hideHeader />
+          </div>
         )}
       </div>
     </section>
@@ -202,6 +214,18 @@ export function FriendProgressPage() {
     setDetailError(null);
   }
 
+  async function handleReciprocalComplete() {
+    try {
+      const updatedFriends = await listIncomingShares();
+      setFriends(updatedFriends);
+      if (selectedId) {
+        setPayload(await getIncomingShareData(selectedId));
+      }
+    } catch {
+      await loadFriends();
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="dashboard-page">
@@ -222,6 +246,7 @@ export function FriendProgressPage() {
           loading={detailLoading}
           error={detailError}
           onBack={closeFriend}
+          onReciprocalComplete={handleReciprocalComplete}
         />
       </div>
     );
@@ -382,6 +407,9 @@ export function FriendProgressDetail({
           window.location.href = "/dashboard/friends";
         })
       }
+      onReciprocalComplete={() => {
+        window.location.reload();
+      }}
     />
   );
 }

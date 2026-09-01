@@ -40,6 +40,7 @@ interface StoredShare {
   id: string;
   ownerId: string;
   ownerName: string;
+  ownerEmail?: string;
   recipientEmail: string;
   resources: Array<{ name: ShareResourceName; permission: "view" }>;
   tokenHash: string;
@@ -48,6 +49,8 @@ interface StoredShare {
   createdAt: string;
   updatedAt: string;
   dataSnapshot: SharedProgressPayload["data"];
+  reciprocalRequested?: boolean;
+  reciprocalResponded?: boolean;
 }
 
 const shares: StoredShare[] = [];
@@ -75,7 +78,45 @@ function toShareRecord(share: StoredShare): ShareRecord {
     expiresAt: share.expiresAt,
     createdAt: share.createdAt,
     updatedAt: share.updatedAt,
+    requestReciprocalAccess: share.reciprocalRequested,
+    reciprocalResponded: share.reciprocalResponded,
   };
+}
+
+function mergeResourceNames(
+  left: StoredShare["resources"],
+  right: StoredShare["resources"]
+) {
+  const names = new Set<ShareResourceName>();
+  const merged: StoredShare["resources"] = [];
+  for (const resource of [...left, ...right]) {
+    if (!names.has(resource.name)) {
+      names.add(resource.name);
+      merged.push(resource);
+    }
+  }
+  return merged;
+}
+
+function findActiveShareByPair(ownerId: string, recipientEmail: string) {
+  return shares.find(
+    (share) =>
+      share.ownerId === ownerId &&
+      share.recipientEmail === recipientEmail &&
+      share.status === "active"
+  );
+}
+
+function viewerSharesWithOwner(viewerEmail: string, ownerEmail?: string) {
+  if (!ownerEmail) return false;
+  const ownerNorm = normalizeShareEmail(ownerEmail);
+  const viewerNorm = normalizeShareEmail(viewerEmail);
+  return shares.some(
+    (share) =>
+      share.status === "active" &&
+      share.recipientEmail === ownerNorm &&
+      share.ownerEmail === viewerNorm
+  );
 }
 
 function findShareByIdForRecipient(
@@ -207,31 +248,72 @@ export function buildSharedDataFromTasks(
 
 export const shareStore = {
   listShares(ownerId: string): ShareRecord[] {
-    return shares
-      .filter((share) => share.ownerId === ownerId)
-      .map(toShareRecord);
+    const active = shares.filter(
+      (share) => share.ownerId === ownerId && share.status === "active"
+    );
+    const grouped = new Map<string, StoredShare>();
+    for (const share of active) {
+      const existing = grouped.get(share.recipientEmail);
+      if (!existing) {
+        grouped.set(share.recipientEmail, share);
+        continue;
+      }
+      grouped.set(share.recipientEmail, {
+        ...existing,
+        resources: mergeResourceNames(existing.resources, share.resources),
+        reciprocalRequested:
+          existing.reciprocalRequested || share.reciprocalRequested,
+        reciprocalResponded:
+          existing.reciprocalResponded || share.reciprocalResponded,
+        updatedAt:
+          share.updatedAt > existing.updatedAt ? share.updatedAt : existing.updatedAt,
+      });
+    }
+    return [...grouped.values()].map(toShareRecord);
   },
 
   listIncomingShares(viewerEmail: string) {
     const normalized = normalizeShareEmail(viewerEmail);
     const now = new Date();
-    return shares
-      .filter(
-        (share) =>
-          share.recipientEmail === normalized &&
-          share.status === "active" &&
-          (!share.expiresAt || new Date(share.expiresAt) >= now)
-      )
-      .map((share) => ({
-        id: share.id,
-        ownerId: share.ownerId,
-        ownerName: share.ownerName,
-        resources: share.resources,
-        status: share.status,
-        expiresAt: share.expiresAt,
-        createdAt: share.createdAt,
-        updatedAt: share.updatedAt,
-      }));
+    const active = shares.filter(
+      (share) =>
+        share.recipientEmail === normalized &&
+        share.status === "active" &&
+        (!share.expiresAt || new Date(share.expiresAt) >= now)
+    );
+    const grouped = new Map<string, StoredShare>();
+    for (const share of active) {
+      const existing = grouped.get(share.ownerId);
+      if (!existing) {
+        grouped.set(share.ownerId, share);
+        continue;
+      }
+      grouped.set(share.ownerId, {
+        ...existing,
+        resources: mergeResourceNames(existing.resources, share.resources),
+        reciprocalRequested:
+          existing.reciprocalRequested || share.reciprocalRequested,
+        reciprocalResponded:
+          existing.reciprocalResponded || share.reciprocalResponded,
+        updatedAt:
+          share.updatedAt > existing.updatedAt ? share.updatedAt : existing.updatedAt,
+      });
+    }
+    return [...grouped.values()].map((share) => ({
+      id: share.id,
+      ownerId: share.ownerId,
+      ownerName: share.ownerName,
+      resources: share.resources,
+      status: share.status,
+      expiresAt: share.expiresAt,
+      createdAt: share.createdAt,
+      updatedAt: share.updatedAt,
+      reciprocalPending: Boolean(
+        share.reciprocalRequested &&
+          !share.reciprocalResponded &&
+          !viewerSharesWithOwner(normalized, share.ownerEmail)
+      ),
+    }));
   },
 
   getIncomingShare(shareId: string, viewerEmail: string) {
@@ -249,6 +331,11 @@ export const shareStore = {
       expiresAt: share.expiresAt,
       createdAt: share.createdAt,
       updatedAt: share.updatedAt,
+      reciprocalPending: Boolean(
+        share.reciprocalRequested &&
+          !share.reciprocalResponded &&
+          !viewerSharesWithOwner(viewerEmail, share.ownerEmail)
+      ),
     };
   },
 
@@ -302,6 +389,23 @@ export const shareStore = {
     const expiresAt = payload.expiresInDays
       ? new Date(Date.now() + payload.expiresInDays * 86400000).toISOString()
       : null;
+
+    const existing = findActiveShareByPair(ownerId, recipientEmail);
+    if (existing) {
+      existing.resources = resources.map((name) => ({ name, permission: "view" as const }));
+      existing.updatedAt = now;
+      existing.ownerName = ownerName.trim() || "Discipline OS user";
+      if (expiresAt) existing.expiresAt = expiresAt;
+      if (payload.requestReciprocalAccess) existing.reciprocalRequested = true;
+      existing.dataSnapshot = dataSnapshot;
+      return {
+        share: toShareRecord(existing),
+        shareToken: null,
+        sharePath: null,
+        updated: true,
+      };
+    }
+
     const token = randomBytes(24).toString("base64url");
     const tokenHash = hashToken(token);
 
@@ -309,6 +413,7 @@ export const shareStore = {
       id: createId("share"),
       ownerId,
       ownerName: ownerName.trim() || "Discipline OS user",
+      ownerEmail: ownerNormalized,
       recipientEmail,
       resources: resources.map((name) => ({ name, permission: "view" })),
       tokenHash,
@@ -317,6 +422,8 @@ export const shareStore = {
       createdAt: now,
       updatedAt: now,
       dataSnapshot,
+      reciprocalRequested: payload.requestReciprocalAccess,
+      reciprocalResponded: false,
     };
 
     shares.unshift(share);
@@ -325,7 +432,62 @@ export const shareStore = {
       share: toShareRecord(share),
       shareToken: token,
       sharePath: `/shared/${token}`,
+      updated: false,
     };
+  },
+
+  updateShare(
+    ownerId: string,
+    shareId: string,
+    resources: ShareResourceName[],
+    dataSnapshot: SharedProgressPayload["data"]
+  ) {
+    const share = shares.find(
+      (item) => item.id === shareId && item.ownerId === ownerId && item.status === "active"
+    );
+    if (!share) return null;
+    share.resources = resources.map((name) => ({ name, permission: "view" }));
+    share.dataSnapshot = dataSnapshot;
+    share.updatedAt = new Date().toISOString();
+    return toShareRecord(share);
+  },
+
+  respondReciprocalShare(
+    viewerId: string,
+    viewerEmail: string,
+    viewerName: string,
+    shareId: string,
+    resources: ShareResourceName[],
+    accept: boolean,
+    dataSnapshot: SharedProgressPayload["data"]
+  ) {
+    const share = shares.find((item) => item.id === shareId);
+    if (!share) {
+      throw new ShareAccessError("Share not found.", "SHARE_NOT_FOUND");
+    }
+    assertShareAccess(share, viewerEmail);
+    share.reciprocalResponded = true;
+
+    if (!accept) {
+      return { accepted: false, share: null };
+    }
+
+    const ownerEmail = share.ownerEmail ?? "";
+    if (ownerEmail && findActiveShareByPair(viewerId, normalizeShareEmail(ownerEmail))) {
+      return { accepted: true, share: null, alreadyShared: true };
+    }
+
+    const created = shareStore.createShare(
+      viewerId,
+      viewerEmail,
+      viewerName,
+      {
+        recipientEmail: ownerEmail,
+        resources: resources.map((name) => ({ name, permission: "view" })),
+      },
+      dataSnapshot
+    );
+    return { accepted: true, share: created.share };
   },
 
   revokeShare(ownerId: string, shareId: string): boolean {

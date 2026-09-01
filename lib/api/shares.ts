@@ -3,11 +3,13 @@ import { apiClient } from "@/lib/api/client";
 import { getStoredToken } from "@/lib/api/auth";
 import type {
   IncomingShareSummary,
+  ReciprocalSharePayload,
   ShareCreatePayload,
   ShareCreateResult,
   SharePreview,
   ShareRecord,
   SharedProgressPayload,
+  ShareUpdatePayload,
 } from "@/lib/data/types";
 
 const { shares: shareRoutes } = API_CONFIG.routes;
@@ -54,6 +56,28 @@ export async function createShare(
   payload: ShareCreatePayload
 ): Promise<ShareCreateResult> {
   return apiClient<ShareCreateResult>(shareRoutes.list, {
+    method: "POST",
+    headers: authHeaders(),
+    body: payload,
+  });
+}
+
+export async function updateShare(
+  id: string,
+  payload: ShareUpdatePayload
+): Promise<ShareRecord> {
+  return apiClient<ShareRecord>(shareRoutes.byId(id), {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: payload,
+  });
+}
+
+export async function respondToReciprocalShare(
+  shareId: string,
+  payload: ReciprocalSharePayload
+): Promise<{ accepted: boolean; share?: ShareRecord | null; alreadyShared?: boolean }> {
+  return apiClient(shareRoutes.reciprocal(shareId), {
     method: "POST",
     headers: authHeaders(),
     body: payload,

@@ -41,6 +41,7 @@ export const API_CONFIG = {
       incomingById: (id: string) => `/api/shares/incoming/${id}`,
       incomingData: (id: string) => `/api/shares/incoming/${id}/data`,
       byId: (id: string) => `/api/shares/${id}`,
+      reciprocal: (id: string) => `/api/shares/incoming/${id}/reciprocal`,
       preview: (token: string) => `/api/shares/access/${token}`,
       data: (token: string) => `/api/shares/access/${token}/data`,
     },

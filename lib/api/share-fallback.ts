@@ -9,7 +9,7 @@ import {
 } from "@/lib/data/share-store";
 import { requireUserId } from "@/lib/api/server-auth";
 import { apiError, apiSuccess } from "@/lib/api/response";
-import type { ShareCreatePayload, ShareResourceName, Task } from "@/lib/data/types";
+import type { ShareCreatePayload, ShareResourceName, ShareUpdatePayload, ReciprocalSharePayload, Task } from "@/lib/data/types";
 import { normalizeTask } from "@/lib/data/task-completions";
 
 interface Viewer {
@@ -139,6 +139,74 @@ export async function createShareFallback(
       dataSnapshot
     );
     return apiSuccess(result, "Share link created", 201);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return apiError("Invalid request body.", 400, "BAD_REQUEST");
+    }
+    return mapShareError(error);
+  }
+}
+
+export async function updateShareFallback(
+  request: Request,
+  shareId: string,
+  bodyText?: string
+) {
+  const viewer = await getViewerFromRequest(request);
+  if (viewer instanceof Response) return viewer;
+
+  try {
+    const raw = bodyText ?? (await request.text());
+    const body = JSON.parse(raw) as ShareUpdatePayload;
+    const resourceNames = body.resources.map((resource) => resource.name);
+    const dataSnapshot = await buildSnapshotForShare(
+      request,
+      viewer,
+      resourceNames
+    );
+    const updated = shareStore.updateShare(
+      viewer.id,
+      shareId,
+      resourceNames,
+      dataSnapshot
+    );
+    if (!updated) {
+      return apiError("Share not found.", 404, "NOT_FOUND");
+    }
+    return apiSuccess(updated, "Share updated");
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return apiError("Invalid request body.", 400, "BAD_REQUEST");
+    }
+    return mapShareError(error);
+  }
+}
+
+export async function respondReciprocalShareFallback(
+  request: Request,
+  shareId: string,
+  bodyText?: string
+) {
+  const viewer = await getViewerFromRequest(request);
+  if (viewer instanceof Response) return viewer;
+
+  try {
+    const raw = bodyText ?? (await request.text());
+    const body = JSON.parse(raw) as ReciprocalSharePayload;
+    const resourceNames = body.resources.map((resource) => resource.name);
+    const dataSnapshot = body.accept
+      ? await buildSnapshotForShare(request, viewer, resourceNames)
+      : {};
+    const result = shareStore.respondReciprocalShare(
+      viewer.id,
+      viewer.email,
+      viewer.name,
+      shareId,
+      resourceNames,
+      body.accept,
+      dataSnapshot
+    );
+    return apiSuccess(result, body.accept ? "Reciprocal share created" : "Request dismissed");
   } catch (error) {
     if (error instanceof SyntaxError) {
       return apiError("Invalid request body.", 400, "BAD_REQUEST");
