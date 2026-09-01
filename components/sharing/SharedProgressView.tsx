@@ -128,8 +128,14 @@ export function SharedProgressView({
           )}
 
           {availableTabs.length > 0 && (
-            <section className="overflow-hidden rounded-2xl border border-border/60 bg-card/40">
-              <div className="scroll-tabs border-b border-border/60 px-3 py-2">
+            <section
+              className={cn(
+                "overflow-hidden rounded-2xl border border-border/60 bg-card/40",
+                activeTab === "comments" &&
+                  "flex h-[min(420px,52vh)] flex-col sm:h-[min(480px,56vh)]"
+              )}
+            >
+              <div className="scroll-tabs shrink-0 border-b border-border/60 px-3 py-2">
                 {availableTabs.map((tab) => (
                   <button
                     key={tab}
@@ -157,7 +163,12 @@ export function SharedProgressView({
                 ))}
               </div>
 
-              <div className="p-4 sm:p-5">
+              <div
+                className={cn(
+                  "p-4 sm:p-5",
+                  activeTab === "comments" && "flex min-h-0 flex-1 flex-col p-0"
+                )}
+              >
                 {activeTab === "tasks" && data.tasks && (
                   <TasksSection
                     tasks={data.tasks.tasks}

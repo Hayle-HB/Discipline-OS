@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, MessageCircle, Reply, Send } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, MessageCircle, Reply, Send, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDashboardUser } from "@/components/dashboard/DashboardLayoutClient";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ export function ShareCommentsPanel({
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<ShareComment | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadComments = useCallback(async () => {
     try {
@@ -87,10 +88,15 @@ export function ShareCommentsPanel({
 
   const tree = useMemo(() => buildCommentTree(comments), [comments]);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [comments, isLoading]);
+
+  async function submitMessage() {
     const body = draft.trim();
-    if (!body) return;
+    if (!body || isSubmitting) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -111,48 +117,59 @@ export function ShareCommentsPanel({
     }
   }
 
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    await submitMessage();
+  }
+
   function renderComment(node: CommentNode, depth = 0) {
     const isOwn = node.authorId === user.id;
 
     return (
-      <li key={node.id} className={cn(depth > 0 && "ml-4 border-l border-border/50 pl-3 sm:ml-6 sm:pl-4")}>
+      <li
+        key={node.id}
+        className={cn(
+          "flex flex-col",
+          isOwn ? "items-end" : "items-start",
+          depth > 0 && (isOwn ? "mr-4 sm:mr-8" : "ml-4 sm:ml-8")
+        )}
+      >
         <div
           className={cn(
-            "rounded-2xl px-3 py-2.5 sm:px-4",
+            "max-w-[85%] rounded-2xl px-3 py-2 sm:max-w-[75%] sm:px-3.5 sm:py-2.5",
             isOwn
-              ? "bg-foreground text-background"
-              : "bg-secondary/60 text-foreground"
+              ? "rounded-br-md bg-foreground text-background"
+              : "rounded-bl-md bg-secondary/70 text-foreground"
           )}
         >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold">{isOwn ? "You" : node.authorName}</p>
-            <time
-              className={cn(
-                "text-[10px] tabular-nums",
-                isOwn ? "text-background/70" : "text-muted-foreground"
-              )}
-              dateTime={node.createdAt}
-            >
-              {formatCommentTime(node.createdAt)}
-            </time>
-          </div>
-          <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{node.body}</p>
+          {!isOwn && depth === 0 && (
+            <p className="mb-0.5 text-[11px] font-semibold text-foreground/80">
+              {node.authorName}
+            </p>
+          )}
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{node.body}</p>
+          <time
+            className={cn(
+              "mt-1 block text-[10px] tabular-nums",
+              isOwn ? "text-background/60" : "text-muted-foreground"
+            )}
+            dateTime={node.createdAt}
+          >
+            {formatCommentTime(node.createdAt)}
+          </time>
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            setReplyTo(node);
-            setDraft("");
-          }}
-          className="mt-1 inline-flex items-center gap-1 px-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+          onClick={() => setReplyTo(node)}
+          className="mt-1 inline-flex items-center gap-1 px-1 text-[10px] font-medium text-muted-foreground hover:text-foreground"
         >
           <Reply className="size-3" aria-hidden="true" />
           Reply
         </button>
 
         {node.replies.length > 0 && (
-          <ul className="mt-2 space-y-3">
+          <ul className="mt-2 flex w-full flex-col gap-2.5">
             {node.replies.map((reply) => renderComment(reply, depth + 1))}
           </ul>
         )}
@@ -161,75 +178,92 @@ export function ShareCommentsPanel({
   }
 
   return (
-    <div className="flex min-h-[320px] flex-col">
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 border-b border-border/60 px-4 py-2.5 sm:px-5">
+        <p className="text-xs text-muted-foreground">
           Chat with {partnerName} about their progress — both of you can comment and reply.
         </p>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-1 items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          Loading comments…
-        </div>
-      ) : tree.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-background/30 px-6 py-10 text-center">
-          <MessageCircle className="size-8 text-muted-foreground/60" aria-hidden="true" />
-          <p className="mt-3 text-sm font-medium text-foreground">Start the conversation</p>
-          <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Leave encouragement, ask how a habit is going, or celebrate a streak.
-          </p>
-        </div>
-      ) : (
-        <ul className="space-y-4 pb-4">{tree.map((node) => renderComment(node))}</ul>
-      )}
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4"
+      >
+        {isLoading ? (
+          <div className="flex h-full min-h-[200px] items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            Loading messages…
+          </div>
+        ) : tree.length === 0 ? (
+          <div className="flex h-full min-h-[200px] flex-col items-center justify-center px-4 text-center">
+            <MessageCircle className="size-7 text-muted-foreground/50" aria-hidden="true" />
+            <p className="mt-2 text-sm font-medium text-foreground">No messages yet</p>
+            <p className="mt-1 max-w-xs text-xs text-muted-foreground">
+              Say hi to {partnerName} — your conversation appears here.
+            </p>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3 pb-1">{tree.map((node) => renderComment(node))}</ul>
+        )}
+      </div>
 
-      <form onSubmit={handleSubmit} className="mt-auto space-y-2 border-t border-border/60 pt-4">
+      <form
+        onSubmit={handleSubmit}
+        className="shrink-0 border-t border-border/60 bg-card/60 px-3 py-3 sm:px-4"
+      >
         {replyTo && (
-          <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-            <span>
-              Replying to <strong className="font-medium text-foreground">{replyTo.authorName}</strong>
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 text-xs">
+            <span className="min-w-0 truncate text-muted-foreground">
+              Replying to{" "}
+              <strong className="font-medium text-foreground">{replyTo.authorName}</strong>
             </span>
             <button
               type="button"
-              className="font-medium text-foreground hover:underline"
+              aria-label="Cancel reply"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
               onClick={() => setReplyTo(null)}
             >
-              Cancel
+              <X className="size-3.5" />
             </button>
           </div>
         )}
 
-        <textarea
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={`Write a message to ${partnerName}…`}
-          rows={3}
-          maxLength={2000}
-          disabled={isSubmitting}
-          className="w-full resize-none rounded-xl border border-border/60 bg-background/60 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20"
-        />
-
         {error && (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="mb-2 text-xs text-destructive">
             {error}
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting || !draft.trim()} className="gap-2">
-          {isSubmitting ? (
-            <>
+        <div className="flex items-end gap-2">
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                void submitMessage();
+              }
+            }}
+            placeholder={`Message ${partnerName}…`}
+            rows={1}
+            maxLength={2000}
+            disabled={isSubmitting}
+            className="max-h-24 min-h-[2.5rem] flex-1 resize-none rounded-2xl border border-border/60 bg-background/80 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/15"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isSubmitting || !draft.trim()}
+            className="size-10 shrink-0 rounded-full"
+            aria-label={replyTo ? "Send reply" : "Send message"}
+          >
+            {isSubmitting ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              Sending…
-            </>
-          ) : (
-            <>
+            ) : (
               <Send className="size-4" aria-hidden="true" />
-              {replyTo ? "Send reply" : "Send comment"}
-            </>
-          )}
-        </Button>
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );
