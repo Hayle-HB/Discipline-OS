@@ -31,6 +31,22 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The frontend proxies API calls to the FastAPI backend on Render. Set these **Environment Variables** in your Vercel project (Settings → Environment Variables):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Value |
+|----------|-------|
+| `BACKEND_API_URL` | `https://discipline-os-backend-29ku.onrender.com` |
+| `JWT_SECRET_KEY` | Same value as `JWT_SECRET_KEY` on your Render backend |
+
+Do **not** set `USE_MOCK_AUTH` in production (or set it to `false`).
+
+Leave `NEXT_PUBLIC_API_URL` empty so the browser calls same-origin `/api/*` routes, which proxy to Render server-side.
+
+### Render backend (already deployed)
+
+- API: [https://discipline-os-backend-29ku.onrender.com](https://discipline-os-backend-29ku.onrender.com)
+- Docs: [https://discipline-os-backend-29ku.onrender.com/docs](https://discipline-os-backend-29ku.onrender.com/docs)
+
+On Render, ensure these env vars are set: `MONGODB_USERNAME`, `MONGODB_PASSWORD`, `MONGODB_CLUSTER`, `MONGODB_DB_NAME`, `JWT_SECRET_KEY`. Optionally add your Vercel URL to `CORS_ORIGINS` (comma-separated) if you call the API directly from the browser later.
+
+After adding Vercel env vars, redeploy the frontend. Login with `demo@discipline.os` / `password123`.
